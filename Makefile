@@ -25,7 +25,7 @@ lint:
 
 coverage: clean
 	# option #1: figleaf
-	find app_pkg test -name "*.py" > coverage.lst
+	find mittach test -name "*.py" > coverage.lst
 	figleaf `which py.test` test
 	figleaf2html -f coverage.lst
 	# option #2: coverage
