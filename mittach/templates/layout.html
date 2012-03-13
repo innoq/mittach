@@ -7,11 +7,14 @@
 	<link rel="shortcut icon" href="{{ url_for("static", filename="favicon.ico") }}">
 	<link rel="stylesheet" href="{{ url_for("static", filename="css/bootstrap.min.css") }}">
 	<link rel="stylesheet" href="{{ url_for("static", filename="css/bootstrap-responsive.min.css") }}">
+	<link rel="stylesheet" href="{{ url_for("static", filename="css/main.css") }}">
 </head>
 
 <body>
   <div class="container">
-    <h1>Mittach</h1>
+    <header>
+      <h1>Mittach</h1>
+    </header>
 	  {% block body %}{% endblock %}
   </div>
 </body>
