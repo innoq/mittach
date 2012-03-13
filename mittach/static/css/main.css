@@ -4,6 +4,13 @@ header {
   border-bottom: 1px solid #E7E7E7;
 }
 
+header h1 {
+  line-height: 58px;
+  padding-left: 180px;
+  font-size: 40px;
+  background: #fff url("images/logo.png") no-repeat top left;
+}
+
 h2 {
   margin-bottom: 10px;
 }
