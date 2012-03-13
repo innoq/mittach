@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, with_statement
 import os
 
 from flask import Flask, g, request, url_for, redirect, render_template, \
-    render_template_string
+    flash, render_template_string
 
 from . import database
 
@@ -51,22 +51,50 @@ def create_event():
         "title": request.form["title"],
         "slots": request.form["slots"]
     }
-    database.create_event(g.db, event)
-    return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
+    errors = validate(event)
+    if (len(errors) == 0):
+        database.create_event(g.db, event)
+        return redirect(url_for("list_events"))
+    else:
+        return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
+
+def validate(event):
+    errors = {}
+    try:
+        int(event["slots"])
+    except ValueError:
+        errors["slots"] = "Keine gueltige Zahl."
+
+    try:
+        int(event["slots"])
+    except ValueError:
+        errors["date"] = "Keine gueltige Zahl."
+
+    if (event["title"] is None or event["title"].strip() == ""):
+        errors["title"] = "Titel fehlt."
+
+    return errors
+    
 
 @app.route("/events/<event_id>/my_booking", methods=["POST"])
 def handle_booking(event_id):
-    if request.form.get("_method", "PUT").upper == "DELETE":
+    if request.form.get("_method", "PUT").upper() == "DELETE":
         return cancel_event(event_id)
     else:
         return book_event(event_id)
 
 @app.route("/events/<event_id>/my_booking", methods=["PUT"])
 def book_event(event_id):
-    database.book_event(g.db, event_id, g.current_user)	
+    if database.book_event(g.db, event_id, g.current_user):
+        flash("Anmeldung erfolgreich.", "success")
+    else:
+        flash("Anmeldung nicht erfolgreich.", "error")
     return redirect(url_for("list_events"))
 
 @app.route("/events/<event_id>/my_booking", methods=["DELETE"])
 def cancel_event(event_id):
-    database.cancel_event(g.db, event_id, g.current_user)	
+    if database.cancel_event(g.db, event_id, g.current_user):
+        flash("Abmeldung erfolgreich.", "success")
+    else:
+        flash("Abmeldung nicht erfolgreich.", "error")
     return redirect(url_for("list_events"))
