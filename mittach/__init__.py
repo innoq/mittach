@@ -44,7 +44,7 @@ def list_events():
         "slots": 5,
         "bookings": ["FND", "tillsc", "robertg", "philipps"] # TODO: rename
     }]
-    return render_template("index.html", events=events)
+    return render_template("index.html", events=events, new_event={})
 
 
 @app.route("/events", methods=["POST"])
@@ -55,4 +55,4 @@ def create_event():
         "slots": int(request.form["slots"])
     }
     database.create_event(g.db, event)
-    return render_template("new_event.html", event=event)
+    return render_template("new_event.html", new_event=event)

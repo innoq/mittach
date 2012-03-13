@@ -1,5 +1,47 @@
 {% extends "layout.html" %}
 
 {% block body %}
-    <p>lipsum</p>
-{% endblock %}
+<div class="row">
+  <div class="span8">
+    <h2>Happenings</h2>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Titel</th>
+          <th>Datum</th>
+          <th>Freie Slots</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in events %}
+        <tr>
+          <td>{{ event.title }}</td>
+          <td>{{ event.date }}</td>
+          <td>{{ event.slots - event.bookings|length }} / {{ event.slots }}</td>
+          <td>
+            {% if g.current_user in event.bookings %}
+            <form method="post" action="{{ url_for("root") }}">
+              <input type="hidden" name="_method" value="delete">
+              <input type="submit" class="btn btn-danger" value="Stornieren">
+            </form>
+            {% elif event.slots > event.bookings|length %}
+            <form method="post" action="{{ url_for("root") }}">
+              <input type="hidden" name="_method" value="put">
+              <input type="submit" class="btn btn-success" value="Buchen">
+            </form>
+            {% else %}
+            allet voll
+            {% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="span4">
+      {% include "create_event.html" %}
+    </div>
+  </div>
+
+
+  {% endblock %}
