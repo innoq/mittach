@@ -2,7 +2,8 @@ from __future__ import absolute_import, division, with_statement
 
 import os
 
-from flask import Flask, g, request, url_for, redirect, render_template
+from flask import Flask, g, request, url_for, redirect, render_template, \
+    render_template_string
 
 from . import database
 
@@ -57,4 +58,4 @@ def create_event():
         "slots": int(request.form["slots"])
     }
     database.create_event(g.db, event)
-    return render_template("new_event.html", new_event=event)
+    return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
