@@ -1,5 +1,6 @@
+<h2>Neuer Termin</h2>
+
 <form method="post" action="{{ url_for("create_event") }}" class="well">
-  <h2>Neues Happening</h2>
   <label>Titel<input type="text" name="title" value="{{ new_event.title }}"></label>
   <label>Datum<input type="datetime" name="date" value="{{ new_event.date }}"></label>
   <label>Slots<input type="number" name="slots" min="1" value="{{ new_event.slots }}"></label>
