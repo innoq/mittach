@@ -22,12 +22,12 @@
           <td>{{ event.slots - event.bookings|length }}</td>
           <td>
             {% if g.current_user in event.bookings %}
-            <form method="post" action="{{ url_for("root") }}">
+            <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
               <input type="hidden" name="_method" value="delete">
               <input type="submit" class="btn btn-danger" value="Stornieren">
             </form>
             {% elif event.slots > event.bookings|length %}
-            <form method="post" action="{{ url_for("root") }}">
+            <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
               <input type="hidden" name="_method" value="put">
               <input type="submit" class="btn btn-success" value="Buchen">
             </form>
