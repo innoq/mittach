@@ -3,7 +3,7 @@
 
 <head>
 	<meta charset="utf-8">
-	<title>Mittach</title>
+	<title>innoMittach</title>
 	<link rel="shortcut icon" href="{{ url_for("static", filename="favicon.ico") }}">
 	<link rel="stylesheet" href="{{ url_for("static", filename="css/bootstrap.min.css") }}">
 	<link rel="stylesheet" href="{{ url_for("static", filename="css/bootstrap-responsive.min.css") }}">
@@ -13,7 +13,7 @@
 <body>
   <div class="container">
     <header>
-      <h1>Mittach</h1>
+      <img src="{{ url_for("static", filename="images/logo.png") }}">
     </header>
 	  {% block body %}{% endblock %}
   </div>
