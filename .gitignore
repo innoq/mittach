@@ -5,4 +5,5 @@
 /.web.pid
 *.pyc
 redis.log
+*.rdb
 
