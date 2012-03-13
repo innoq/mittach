@@ -4,3 +4,5 @@
 /.db.pid
 /.web.pid
 *.pyc
+redis.log
+
