@@ -40,20 +40,14 @@ def root():
 
 @app.route("/events")
 def list_events():
-    events = [{
-        "id": 1,
-        "date": 20120313, # epoch
-        "title": "Hello World",
-        "slots": 5,
-        "bookings": ["FND", "tillsc", "robertg", "philipps"] # TODO: rename
-    }]
+    events = database.list_events(g.db)
     return render_template("index.html", events=events, new_event={})
 
 
 @app.route("/events", methods=["POST"])
 def create_event():
     event = {
-        "date": request.form["date"],
+        "date": int(request.form["date"]),
         "title": request.form["title"],
         "slots": int(request.form["slots"])
     }
