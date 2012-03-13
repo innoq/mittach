@@ -59,3 +59,20 @@ def create_event():
     }
     database.create_event(g.db, event)
     return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
+
+@app.route("/events/<event_id>/my_booking", methods=["POST"])
+def handle_booking(event_id):
+    if request.form.get("_method", "PUT").upper == "DELETE":
+        return cancel_event(event_id)
+    else:
+        return book_event(event_id)
+
+@app.route("/events/<event_id>/my_booking", methods=["PUT"])
+def book_event(event_id):
+    database.book_event(g.db, event_id, g.current_user)	
+    return redirect(url_for("list_events"))
+
+@app.route("/events/<event_id>/my_booking", methods=["DELETE"])
+def cancel_event(event_id):
+    database.cancel_event(g.db, event_id, g.current_user)	
+    return redirect(url_for("list_events"))
