@@ -54,8 +54,11 @@ def create_event():
     errors = validate(event)
     if (len(errors) == 0):
         database.create_event(g.db, event)
+        flash("Happening erstellt.", "success")
         return redirect(url_for("list_events"))
     else:
+        for field, msg in errors.items():
+            flash(msg, "error")
         return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
 
 def validate(event):
@@ -63,12 +66,12 @@ def validate(event):
     try:
         int(event["slots"])
     except ValueError:
-        errors["slots"] = "Keine gueltige Zahl."
+        errors["slots"] = "Slots muss eine Zahl sein."
 
     try:
-        int(event["slots"])
+        int(event["date"])
     except ValueError:
-        errors["date"] = "Keine gueltige Zahl."
+        errors["date"] = "Ungueltiges Datum."
 
     if (event["title"] is None or event["title"].strip() == ""):
         errors["title"] = "Titel fehlt."
