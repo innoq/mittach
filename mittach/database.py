@@ -27,10 +27,10 @@ def list_events(db):
     for event_id in event_ids: # XXX: use .map?
         namespace = "events:%s" % event_id
         event = {
-            "id": event_id,
-            "date": db.get("%s:date" % namespace),
+            "id": int(event_id),
+            "date": int(db.get("%s:date" % namespace)),
             "title": db.get("%s:title" % namespace),
-            "slots": db.get("%s:slots" % namespace),
+            "slots": int(db.get("%s:slots" % namespace)),
             "bookings": []
         }
         events.append(event)

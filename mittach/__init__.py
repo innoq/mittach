@@ -47,9 +47,9 @@ def list_events():
 @app.route("/events", methods=["POST"])
 def create_event():
     event = {
-        "date": int(request.form["date"]),
+        "date": request.form["date"],
         "title": request.form["title"],
-        "slots": int(request.form["slots"])
+        "slots": request.form["slots"]
     }
     database.create_event(g.db, event)
     return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
