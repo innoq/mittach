@@ -4,6 +4,8 @@ import os
 
 from flask import Flask, g, request, url_for, redirect, render_template
 
+from . import database
+
 
 __version__ = "0.1.0"
 
@@ -22,7 +24,7 @@ with app.open_resource("../secret") as fd: # XXX: potential security hazard as t
 @app.before_request
 def before_request():
     g.current_user = "FND"
-    g.db = database.connect(app)
+    g.db = database.connect(app.config)
 
 
 @app.teardown_request
