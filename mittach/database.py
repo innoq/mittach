@@ -11,10 +11,26 @@ def create_event(db, data):
     namespace = "events:%s" % event_id
 
     pipe = db.pipeline()
-    pipe.sadd("events", event_id)
+    pipe.lpush("events", event_id)
     pipe.set("%s:date" % namespace, data["date"])
     pipe.set("%s:title" % namespace, data["title"])
     pipe.set("%s:slots" % namespace, data["slots"])
     pipe.execute()
 
-    return True
+    return event_id
+
+
+def list_events(db):
+    event_ids = db.lrange("events", 0, -1)
+
+    events = []
+    for event_id in event_ids: # XXX: use .map?
+        namespace = "events:%s" % event_id
+        event = {
+            "date": db.get("%s:date" % namespace),
+            "title": db.get("%s:title" % namespace),
+            "slots": db.get("%s:slots" % namespace)
+        }
+        events.append(event)
+
+    return events
