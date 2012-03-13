@@ -1,3 +1,6 @@
 /venv
 /activate
 /secret
+/.db.pid
+/.web.pid
+*.pyc
