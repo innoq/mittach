@@ -19,7 +19,7 @@
         <tr>
           <td>{{ event.title }}</td>
           <td>{{ event.date }}</td>
-          <td>{{ event.slots - event.bookings|length }} / {{ event.slots }}</td>
+          <td>{{ event.slots - event.bookings|length }}</td>
           <td>
             {% if g.current_user in event.bookings %}
             <form method="post" action="{{ url_for("root") }}">
