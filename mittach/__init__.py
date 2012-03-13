@@ -22,6 +22,7 @@ with app.open_resource("../secret") as fd: # XXX: potential security hazard as t
 @app.before_request
 def before_request():
     g.current_user = "FND"
+    g.db = database.connect(app)
 
 
 @app.teardown_request
@@ -53,4 +54,5 @@ def create_event():
         "title": request.form["title"],
         "slots": int(request.form["slots"])
     }
+    database.create_event(g.db, event)
     return render_template("new_event.html", event=event)
