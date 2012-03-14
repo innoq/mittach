@@ -10,13 +10,19 @@
 	<link rel="stylesheet" href="{{ url_for("static", filename="css/main.css") }}">
 </head>
 
+	{% for category, message in get_flashed_messages(true) %}
+	<div class="alert alert-{{ category }}">{{ message }}</div>
+	{% endfor %}
 <body>
-  <div class="container">
-    <header>
-      <img src="{{ url_for("static", filename="images/logo.png") }}">
-    </header>
-	  {% block body %}{% endblock %}
-  </div>
+	<div class="container">
+		<header>
+			<img src="{{ url_for("static", filename="images/logo.png") }}">
+		</header>
+		{% block body %}{% endblock %}
+	</div>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
+	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-popover.js"></script>
+	<script src="{{ url_for("static", filename="js/application.js") }}"></script>
 </body>
-
 </html>
