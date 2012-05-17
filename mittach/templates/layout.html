@@ -8,6 +8,7 @@
 	<link rel="stylesheet" href="{{ url_for("static", filename="css/bootstrap.min.css") }}">
 	<link rel="stylesheet" href="{{ url_for("static", filename="css/bootstrap-responsive.min.css") }}">
 	<link rel="stylesheet" href="{{ url_for("static", filename="css/main.css") }}">
+	<link rel="stylesheet" href="{{ url_for("static", filename="css/kalendae.css") }}">
 </head>
 
 	{% for category, message in get_flashed_messages(true) %}
@@ -23,6 +24,7 @@
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
 	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
 	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-popover.js"></script>
+	<script src="{{ url_for("static", filename="js/kalendae.min.js") }}"></script>
 	<script src="{{ url_for("static", filename="js/application.js") }}"></script>
 </body>
 </html>

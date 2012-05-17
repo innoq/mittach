@@ -88,7 +88,7 @@ def validate(event):
         errors["slots"] = "Slots muss eine Zahl sein."
 
     try:
-        int(event["date"])
+        int(event["date"]) # XXX: insufficient!?
     except ValueError:
         errors["date"] = "Ungueltiges Datum."
 

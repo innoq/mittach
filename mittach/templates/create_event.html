@@ -2,7 +2,7 @@
 
 <form method="post" action="{{ url_for("create_event") }}" class="well">
   <label>Titel<input type="text" name="title" value="{{ new_event.title }}"></label>
-  <label>Datum<input type="datetime" name="date" value="{{ new_event.date }}"></label>
+  <label>Datum<input type="text" name="date" value="{{ new_event.date }}" class="auto-kal"></label>
   <label>Slots<input type="number" name="slots" min="1" value="{{ new_event.slots }}"></label>
   <input type="submit" class="btn btn-primary" value="Speichern">
 </form>
