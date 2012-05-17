@@ -2,8 +2,8 @@ from __future__ import absolute_import, division, with_statement
 
 import os
 
-from flask import Flask, g, request, url_for, redirect, render_template, \
-    flash, render_template_string
+from flask import Flask, g, request, url_for, redirect, abort, \
+    render_template, flash, render_template_string
 
 from . import database
 
@@ -14,9 +14,25 @@ NAME = "Mittach" # XXX: unnecessary?
 MODE = os.environ.get("%s_CONFIG_MODE" % NAME.upper(), "development").lower() # TODO: document
 
 
+class RemoteUserMiddleware(object):
+    """
+    WSGI middleware to inject a REMOTE_USER for debugging purposes
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        from getpass import getuser
+        environ["REMOTE_USER"] = getuser()
+        return self.app(environ, start_response)
+
+
 # initialize application
 app = Flask(__name__)
 app.config.from_object("%s.config.%sConfig" % (__name__, MODE.capitalize()))
+if app.debug:
+    app.wsgi_app = RemoteUserMiddleware(app.wsgi_app)
 # TODO: support for custom settings (via `from_envvar / `from_pyfile`) - NB: must be mode-dependent
 with app.open_resource("../secret") as fd: # XXX: potential security hazard as the same secret is used for production and development/testing
     app.config["SECRET_KEY"] = fd.read()
@@ -24,7 +40,9 @@ with app.open_resource("../secret") as fd: # XXX: potential security hazard as t
 
 @app.before_request
 def before_request():
-    g.current_user = "FND"
+    g.current_user = request.environ.get("REMOTE_USER")
+    if not g.current_user:
+        abort(403)
     g.db = database.connect(app.config)
 
 
