@@ -79,6 +79,7 @@ def create_event():
             flash(msg, "error")
         return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
 
+
 def validate(event):
     errors = {}
     try:
@@ -95,7 +96,7 @@ def validate(event):
         errors["title"] = "Titel fehlt."
 
     return errors
-    
+
 
 @app.route("/events/<event_id>/my_booking", methods=["POST"])
 def handle_booking(event_id):
@@ -104,6 +105,7 @@ def handle_booking(event_id):
     else:
         return book_event(event_id)
 
+
 @app.route("/events/<event_id>/my_booking", methods=["PUT"])
 def book_event(event_id):
     if database.book_event(g.db, event_id, g.current_user):
@@ -111,6 +113,7 @@ def book_event(event_id):
     else:
         flash("Anmeldung nicht erfolgreich.", "error")
     return redirect(url_for("list_events"))
+
 
 @app.route("/events/<event_id>/my_booking", methods=["DELETE"])
 def cancel_event(event_id):
