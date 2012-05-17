@@ -65,7 +65,7 @@ def list_events():
 @app.route("/events", methods=["POST"])
 def create_event():
     event = {
-        "date": request.form["date"],
+        "date": request.form["date"].replace("-", ""),
         "title": request.form["title"],
         "slots": request.form["slots"]
     }
@@ -82,14 +82,17 @@ def create_event():
 
 def validate(event):
     errors = {}
+
     try:
         int(event["slots"])
     except ValueError:
         errors["slots"] = "Slots muss eine Zahl sein."
 
+    date = event["date"]
     try:
-        int(event["date"]) # XXX: insufficient!?
-    except ValueError:
+        assert len(date) == 8
+        int(date)
+    except AssertionError, ValueError:
         errors["date"] = "Ungueltiges Datum."
 
     if (event["title"] is None or event["title"].strip() == ""):
@@ -122,3 +125,14 @@ def cancel_event(event_id):
     else:
         flash("Abmeldung nicht erfolgreich.", "error")
     return redirect(url_for("list_events"))
+
+
+def format_date(value): # XXX: does not belong here
+    """
+    converts an integer representing a date into a string:
+    20120315 -> "2012-03-15"
+    """
+    date = str(value)
+    return "%s-%s-%s" % (date[0:4], date[4:6], date[6:8])
+
+app.jinja_env.filters["format_date"] = format_date # XXX: does not belong here!

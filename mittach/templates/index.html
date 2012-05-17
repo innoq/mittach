@@ -20,7 +20,7 @@
 						<td data-popover-title="Teilnehmer" data-popover-content="{{ event.bookings|join(', ')|default('Es haben sich noch keine Teilnehmer angemeldet', true) }}">
 							{{ event.title }}
 						</td>
-						<td>{{ event.date }}</td>
+						<td>{{ event.date|format_date }}</td>
 						<td>{{ event.slots - event.bookings|length }}</td>
 						<td>
 							{% if g.current_user in event.bookings %}

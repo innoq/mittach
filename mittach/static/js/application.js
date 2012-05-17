@@ -1,7 +1,7 @@
 (function($) {
 	"use strict";
 
-	Kalendae.Input.prototype.defaults.format = "YYYYMMDD"; // XXX: hacky!?
+	Kalendae.Input.prototype.defaults.format = "YYYY-MM-DD"; // XXX: hacky!?
 
 	$("[data-popover-content]").each(function() {
 		$(this).popover({
