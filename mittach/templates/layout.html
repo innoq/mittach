@@ -18,6 +18,7 @@
 	<div class="container">
 		<header>
 			<img src="{{ url_for("static", filename="images/logo.png") }}">
+			<p>Mahlzeit, {{ g.current_user }}</p>
 		</header>
 		{% block body %}{% endblock %}
 	</div>

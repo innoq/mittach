@@ -4,6 +4,10 @@ header {
   border-bottom: 1px solid #E7E7E7;
 }
 
+header p {
+  float: right;
+}
+
 h2 {
   margin-bottom: 10px;
 }
