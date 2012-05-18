@@ -20,23 +20,31 @@ def create_event(db, data):
     return event_id
 
 
-def list_events(db):
-    event_ids = db.lrange("events", 0, -1)
+def list_events(db, start=None, end=None):
+    """
+    returns a list of events, optionally limited to a time frame
+
+    both start and end date are ISO-8601-like integers
+    """
+    scoped = start and end
+    event_ids = db.lrange("events", 0, -1) # XXX: does not scale!?
 
     events = []
-    for event_id in event_ids: # XXX: use .map?
+    for event_id in event_ids: # XXX: use `map`?
         namespace = "events:%s" % event_id
-        slots = int(db.get("%s:slots" % namespace))
-        event = {
-            "id": int(event_id),
-            "date": int(db.get("%s:date" % namespace)),
-            "title": db.get("%s:title" % namespace),
-            "slots": slots,
-            "bookings": db.lrange("%s:bookings" % namespace, 0, slots - 1)
-        }
-        events.append(event)
+        date = int(db.get("%s:date" % namespace))
+        if not scoped or start <= date <= end:
+            slots = int(db.get("%s:slots" % namespace))
+            event = {
+                "id": int(event_id),
+                "date": date,
+                "title": db.get("%s:title" % namespace),
+                "slots": slots,
+                "bookings": db.lrange("%s:bookings" % namespace, 0, slots - 1)
+            }
+            events.append(event)
 
-    return events
+    return events # TODO: use generator
 
 
 def book_event(db, event_id, username):

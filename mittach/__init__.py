@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, with_statement
 
 import os
 
-from flask import Flask, g, request, url_for, redirect, abort, \
+from flask import Flask, g, request, url_for, make_response, redirect, abort, \
     render_template, flash, render_template_string
 
 from . import database
@@ -65,7 +65,7 @@ def list_events():
 @app.route("/events", methods=["POST"])
 def create_event():
     event = {
-        "date": request.form["date"].replace("-", ""),
+        "date": request.form["date"].replace("-", ""), # TODO: use `normalize_date`
         "title": request.form["title"],
         "slots": request.form["slots"]
     }
@@ -80,6 +80,27 @@ def create_event():
         return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
 
 
+@app.route("/reports/<start>/<end>")
+def report_bookings(start, end):
+    """
+    displays a simple report of events plus bookings in the given time frame
+
+    both start and end date are ISO-8601 date strings
+    """
+    try:
+        start, end = map(normalize_date, (start, end))
+    except ValueError:
+        abort(400)
+
+    events = database.list_events(g.db, start, end)
+    events = sorted(["%s: %s" % (format_date(ev["date"]),
+            "; ".join(ev["bookings"])) for ev in events]) # TODO: limit by AuthZ / user
+
+    response = make_response("\n".join(events))
+    response.headers["Content-Type"] = "text/plain"
+    return response
+
+
 def validate(event):
     errors = {}
 
@@ -92,7 +113,7 @@ def validate(event):
     try:
         assert len(date) == 8
         int(date)
-    except AssertionError, ValueError:
+    except (AssertionError, ValueError):
         errors["date"] = "Ungueltiges Datum."
 
     if (event["title"] is None or event["title"].strip() == ""):
@@ -129,10 +150,26 @@ def cancel_event(event_id):
 
 def format_date(value): # XXX: does not belong here
     """
-    converts an integer representing a date into a string:
+    converts an ISO-8601-like integer into a date string:
     20120315 -> "2012-03-15"
     """
     date = str(value)
     return "%s-%s-%s" % (date[0:4], date[4:6], date[6:8])
+
+
+def normalize_date(value): # XXX: does not belong here
+    """
+    converts an ISO-8601 date string into an integer:
+    "2012-03-15" -> 20120315
+
+    raises ValueError if date format is not ISO-8601
+    """
+    try:
+        assert len(value) == 10
+        assert value[4] == value[7] == "-"
+        date = int(value.replace("-", ""))
+    except (AssertionError, ValueError):
+        raise ValueError("invalid date format")
+    return date
 
 app.jinja_env.filters["format_date"] = format_date # XXX: does not belong here!
