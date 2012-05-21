@@ -1,4 +1,4 @@
-.PHONY: init server terminate test lint coverage clean secret env
+.PHONY: init server terminate dist test lint coverage clean secret env
 
 init: env secret
 	@echo
@@ -12,6 +12,9 @@ terminate:
 	pkill -TERM -P `cat .web.pid` || true
 	kill -TERM `cat .db.pid` || true
 	rm .web.pid .db.pid || true
+
+dist: clean test
+	python setup.py sdist
 
 test: clean
 	py.test -s --tb=short test
@@ -38,6 +41,7 @@ coverage: clean
 
 clean:
 	find . -name "*.pyc" | xargs rm || true
+	rm -r mittach.egg-info || true
 	rm -rf html .figleaf coverage.lst # figleaf
 	rm -rf htmlcov .coverage # coverage
 	rm -rf test/__pycache__ # pytest

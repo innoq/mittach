@@ -1,0 +1,3 @@
+include README*
+recursive-include mittach/templates *
+recursive-include mittach/static *

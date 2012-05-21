@@ -5,10 +5,9 @@ import os
 from flask import Flask, g, request, url_for, make_response, redirect, abort, \
     render_template, flash, render_template_string
 
+from .version import __version__
 from . import database
 
-
-__version__ = "0.1.0"
 
 NAME = "Mittach" # XXX: unnecessary?
 MODE = os.environ.get("%s_CONFIG_MODE" % NAME.upper(), "development").lower() # TODO: document
