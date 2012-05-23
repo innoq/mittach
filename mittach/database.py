@@ -38,7 +38,7 @@ def list_events(db, start=None, end=None):
             event = {
                 "id": int(event_id),
                 "date": date,
-                "title": db.get("%s:title" % namespace),
+                "title": db.get("%s:title" % namespace).decode("utf-8"),
                 "slots": slots,
                 "bookings": db.lrange("%s:bookings" % namespace, 0, slots - 1)
             }
