@@ -11,3 +11,7 @@ header p {
 h2 {
   margin-bottom: 10px;
 }
+
+a:hover.k-btn-close {
+  text-decoration: none;
+}
