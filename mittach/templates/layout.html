@@ -2,30 +2,29 @@
 <html>
 
 <head>
-	<meta charset="utf-8">
-	<title>innoMittach</title>
-	<link rel="shortcut icon" href="{{ url_for("static", filename="favicon.ico") }}">
-	<link rel="stylesheet" href="{{ url_for("static", filename="css/bootstrap.min.css") }}">
-	<link rel="stylesheet" href="{{ url_for("static", filename="css/bootstrap-responsive.min.css") }}">
-	<link rel="stylesheet" href="{{ url_for("static", filename="css/main.css") }}">
-	<link rel="stylesheet" href="{{ url_for("static", filename="css/kalendae.css") }}">
+  <meta charset="utf-8">
+  <title>innoMittach</title>
+  <link rel="shortcut icon" href="{{ url_for("static", filename="favicon.ico") }}">
+  <link rel="stylesheet" href="{{ url_for("static", filename="css/bootstrap.min.css") }}">
+  <link rel="stylesheet" href="{{ url_for("static", filename="css/bootstrap-responsive.min.css") }}">
+  <link rel="stylesheet" href="{{ url_for("static", filename="css/main.css") }}">
+  <link rel="stylesheet" href="{{ url_for("static", filename="css/kalendae.css") }}">
 </head>
-
-	{% for category, message in get_flashed_messages(true) %}
-	<div class="alert alert-{{ category }}">{{ message }}</div>
-	{% endfor %}
 <body>
-	<div class="container">
-		<header>
-			<img src="{{ url_for("static", filename="images/logo.png") }}">
-			<p>Mahlzeit, {{ g.current_user }}</p>
-		</header>
-		{% block body %}{% endblock %}
-	</div>
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
-	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
-	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-popover.js"></script>
-	<script src="{{ url_for("static", filename="js/kalendae.min.js") }}"></script>
-	<script src="{{ url_for("static", filename="js/application.js") }}"></script>
+  <div class="container">
+    <header>
+      <img src="{{ url_for("static", filename="images/logo.png") }}">
+      <p>Mahlzeit, {{ g.current_user }}</p>
+    </header>
+    {% for category, message in get_flashed_messages(true) %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% block body %}{% endblock %}
+  </div>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+  <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
+  <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-popover.js"></script>
+  <script src="{{ url_for("static", filename="js/kalendae.min.js") }}"></script>
+  <script src="{{ url_for("static", filename="js/application.js") }}"></script>
 </body>
 </html>
