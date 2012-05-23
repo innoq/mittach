@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 from __future__ import absolute_import, division, with_statement
 
 import os
@@ -113,7 +115,7 @@ def validate(event):
         assert len(date) == 8
         int(date)
     except (AssertionError, ValueError):
-        errors["date"] = "Ungueltiges Datum."
+        errors["date"] = "Ungültiges Datum."
 
     if (event["title"] is None or event["title"].strip() == ""):
         errors["title"] = "Titel fehlt."
