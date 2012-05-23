@@ -115,7 +115,7 @@ def validate(event):
         assert len(date) == 8
         int(date)
     except (AssertionError, ValueError):
-        errors["date"] = "Ungültiges Datum."
+        errors["date"] = u"Ungültiges Datum."
 
     if (event["title"] is None or event["title"].strip() == ""):
         errors["title"] = "Titel fehlt."
