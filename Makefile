@@ -1,12 +1,14 @@
-.PHONY: init server terminate dist test lint coverage clean secret env
+.PHONY: init server db terminate dist test lint coverage clean secret env
 
 init: env secret
 	@echo
 	@echo "[INFO] use \`source activate\` to activate Python environment"
 
-server: terminate
-	redis-server > ./redis.log & echo $$! > .db.pid
+server: terminate db
 	./server & echo $$! > .web.pid
+
+db:
+	redis-server > ./redis.log & echo $$! > .db.pid
 
 terminate:
 	pkill -TERM -P `cat .web.pid` || true
