@@ -1,4 +1,4 @@
-.PHONY: init server db terminate dist test lint coverage clean secret env
+.PHONY: init server db terminate dist deploy test lint coverage clean secret env
 
 init: env secret
 	@echo
@@ -16,9 +16,13 @@ terminate:
 	rm .web.pid .db.pid || true
 
 dist: clean test
+	rm -r dist || true
 	python setup.py sdist
 
-test: clean
+deploy: dist
+	./deploy
+
+test: clean terminate db
 	py.test -s --tb=short test
 
 lint:
