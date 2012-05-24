@@ -10,8 +10,8 @@ Installation
 
 ### Anforderungen
 
-* Phython >= 2.5
-* pip (`sudo easy_install pip`)
+* Python >= 2.5
+* [pip](http://www.pip-installer.org/en/latest/installing.html)
 * virtualenv (`sudo pip install virtualenv`)
 
 ### Setup

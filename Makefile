@@ -56,6 +56,6 @@ secret:
 	$$SHELL -c 'echo $$RANDOM | sha1sum > secret' # XXX: suboptimal
 
 env:
-	virtualenv --no-site-packages venv
+	virtualenv --distribute venv
 	ln -s venv/bin/activate
 	$$SHELL -c '. venv/bin/activate; pip install -r REQUIREMENTS.txt'
