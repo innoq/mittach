@@ -19,6 +19,7 @@ Installation
 Umgebung anlegen:
 
     make init
+    make secret
 
 Server Starten:
 
