@@ -18,6 +18,7 @@ terminate:
 dist: clean test
 	rm -r dist || true
 	python setup.py sdist
+	git tag v`python -c 'import mittach; print mittach.__version__'`
 
 deploy: dist
 	./deploy
