@@ -12,7 +12,7 @@ Installation
 
 * Python >= 2.5
 * [pip](http://www.pip-installer.org/en/latest/installing.html)
-* virtualenv (`sudo pip install virtualenv`)
+* virtualenv `sudo pip install virtualenv`
 
 ### Setup
 
