@@ -1,6 +1,6 @@
 import os
 
-os.environ["MITTACH_CONFIG_MODE"] = "testing" # XXX: hard-codes statusq.NAME
+os.environ["MITTACH_CONFIG_MODE"] = "testing" # XXX: duplicates mittach.NAME
 from mittach import app, database
 
 

@@ -8,11 +8,11 @@ from flask import Flask, g, request, url_for, make_response, redirect, abort, \
     render_template, flash, render_template_string
 
 from .version import __version__
+from .config import read_config
 from . import database
 
 
 NAME = "Mittach" # XXX: unnecessary?
-MODE = os.environ.get("%s_CONFIG_MODE" % NAME.upper(), "development").lower() # TODO: document
 
 
 class RemoteUserMiddleware(object):
@@ -29,14 +29,19 @@ class RemoteUserMiddleware(object):
         return self.app(environ, start_response)
 
 
-# initialize application
-app = Flask(__name__)
-app.config.from_object("%s.config.%sConfig" % (__name__, MODE.capitalize()))
+# initialize application -- TODO: move into function
+app = Flask(__name__, instance_relative_config=True)
+try:
+    config = read_config(app.open_instance_resource("config.ini"))
+except IOError: # XXX: temporary workaround until `__init__.py` is nothing but metadata
+    import sys
+    print >> sys.stderr, "[WARNING] bootstrapping configuration"
+    config = { "mode": "development", "secret": None }
+app.config.from_object("%s.config.%sConfig" % (__name__, config["mode"].capitalize()))
+app.config["MODE"] = config["mode"]
+app.config["SECRET_KEY"] = config["secret"]
 if app.debug:
     app.wsgi_app = RemoteUserMiddleware(app.wsgi_app)
-# TODO: support for custom settings (via `from_envvar / `from_pyfile`) - NB: must be mode-dependent
-with app.open_resource("../secret") as fd: # XXX: potential security hazard as the same secret is used for production and development/testing
-    app.config["SECRET_KEY"] = fd.read()
 
 
 @app.before_request

@@ -11,20 +11,9 @@ import sys
 import os
 
 
-NAME = "Mittach" # XXX: duplicates mittach.NAME
-
-
 def main(args):
-    try:
-        mode = args[1]
-    except IndexError:
-        mode = "development"
-
-    key = "%s_CONFIG_MODE" % NAME.upper()
-    os.environ.setdefault(key, mode)
-
     from mittach import app
-    print "[INFO] starting in %s mode" % mode
+    print "[INFO] starting in %s mode" % app.config["MODE"]
     app.run()
 
     return True
