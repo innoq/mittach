@@ -2,6 +2,8 @@
 default configuration
 """
 
+from ConfigParser import RawConfigParser
+
 
 class Config(object):
     DEBUG = False
@@ -33,3 +35,9 @@ class TestingConfig(Config):
       "port": 6379,
       "redis_db": 2
     }
+
+
+def read_config(filehandle):
+    config = RawConfigParser()
+    config.readfp(filehandle)
+    return dict(config.items("settings"))

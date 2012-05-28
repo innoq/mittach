@@ -1,6 +1,6 @@
-.PHONY: init server db terminate dist deploy test lint coverage clean secret env
+.PHONY: init server db terminate dist deploy test lint coverage clean instance env
 
-init: env secret
+init: env instance
 	@echo
 	@echo "[INFO] use \`source activate\` to activate Python environment"
 
@@ -53,10 +53,10 @@ clean:
 	rm -rf htmlcov .coverage # coverage
 	rm -rf test/__pycache__ # pytest
 
-secret:
-	$$SHELL -c 'echo $$RANDOM | sha1sum > secret' # XXX: suboptimal
+instance:
+	$$SHELL -c '. venv/bin/activate; python -m mittach.instancer instance development'
 
 env:
 	virtualenv --distribute venv
 	ln -s venv/bin/activate
-	$$SHELL -c '. venv/bin/activate; pip install -r REQUIREMENTS.txt'
+	$$SHELL -c '. venv/bin/activate; pip install -r REQUIREMENTS.txt' # XXX: `REQUIREMENTS.txt` should be replaced by dependency info from `setup.py`
