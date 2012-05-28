@@ -1,3 +1,6 @@
 include README*
+include app.wsgi
+include setup.py
+include Makefile
 recursive-include mittach/templates *
 recursive-include mittach/static *
