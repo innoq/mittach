@@ -115,7 +115,7 @@ def validate(event):
     try:
         int(event["slots"])
     except ValueError:
-        errors["slots"] = "Slots muss eine Zahl sein."
+        event["slots"] = -1 # XXX: hacky?
 
     date = event["date"]
     try:

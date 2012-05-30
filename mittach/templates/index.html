@@ -10,7 +10,7 @@
           <tr>
             <th>Speise</th>
             <th>Datum</th>
-            <th>Freie Slots</th>
+            <th>Anmeldungen</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -21,14 +21,14 @@
               <a href="#">{{ event.title }}</a>
             </td>
             <td>{{ event.date|format_date }}</td>
-            <td>{{ event.slots - event.bookings|length }}</td>
+            <td>{{ event.bookings|length }}</td>
             <td>
               {% if g.current_user in event.bookings %}
               <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
                 <input type="hidden" name="_method" value="delete">
                 <input type="submit" class="btn btn-danger" value="Stornieren">
               </form>
-              {% elif event.slots > event.bookings|length %}
+              {% elif event.slots == -1 or event.slots > event.bookings|length %}
               <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
                 <input type="hidden" name="_method" value="put">
                 <input type="submit" class="btn btn-success" value="Buchen">
