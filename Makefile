@@ -1,4 +1,4 @@
-.PHONY: init server db terminate dist deploy test lint coverage clean instance env
+.PHONY: init server db terminate release dist deploy test lint coverage clean instance env
 
 init: env instance
 	@echo
@@ -15,10 +15,13 @@ terminate:
 	kill -TERM `cat .db.pid` || true
 	rm .web.pid .db.pid || true
 
+release: dist
+	git tag v`python -c 'import mittach; print mittach.__version__'`
+	git push
+
 dist: clean test
 	rm -r dist || true
 	python setup.py sdist
-	git tag v`python -c 'import mittach; print mittach.__version__'`
 
 deploy: dist
 	./deploy
