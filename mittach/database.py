@@ -14,6 +14,7 @@ def create_event(db, data):
     pipe.lpush("events", event_id)
     pipe.set("%s:date" % namespace, data["date"])
     pipe.set("%s:title" % namespace, data["title"])
+    pipe.set("%s:details" % namespace, data["details"])
     pipe.set("%s:slots" % namespace, data["slots"])
     pipe.execute()
 
@@ -39,6 +40,7 @@ def list_events(db, start=None, end=None):
                 "id": int(event_id),
                 "date": date,
                 "title": db.get("%s:title" % namespace).decode("utf-8"),
+                "details": (db.get("%s:details" % namespace) or "").decode("utf-8"),
                 "slots": slots,
                 "bookings": db.lrange("%s:bookings" % namespace, 0, slots - 1)
             }

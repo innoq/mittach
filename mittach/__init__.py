@@ -75,6 +75,7 @@ def create_event():
     event = {
         "date": request.form["date"].replace("-", ""), # TODO: use `normalize_date`
         "title": request.form["title"],
+        "details": request.form["details"],
         "slots": request.form["slots"]
     }
     errors = validate(event)
