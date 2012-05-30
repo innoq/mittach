@@ -17,7 +17,7 @@ terminate:
 
 release: dist
 	git tag v`python -c 'import mittach; print mittach.__version__'`
-	git push
+	git push --tags
 
 dist: clean test
 	rm -r dist || true
