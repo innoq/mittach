@@ -4,6 +4,8 @@ from __future__ import absolute_import, division, with_statement
 
 import os
 
+from datetime import datetime
+
 from flask import Flask, g, request, url_for, make_response, redirect, abort, \
     render_template, flash, render_template_string
 
@@ -160,7 +162,12 @@ def format_date(value): # XXX: does not belong here
     20120315 -> "2012-03-15"
     """
     date = str(value)
-    return "%s-%s-%s" % (date[0:4], date[4:6], date[6:8])
+
+    weekday = datetime.strptime(date, "%Y%m%d").weekday()
+    weekday = ("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag",
+            "Samstag", "Sonntag")[weekday]
+
+    return "%s-%s-%s (%s)" % (date[0:4], date[4:6], date[6:8], weekday)
 
 
 def normalize_date(value): # XXX: does not belong here
