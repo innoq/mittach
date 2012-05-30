@@ -78,7 +78,7 @@ def create_event():
     errors = validate(event)
     if (len(errors) == 0):
         database.create_event(g.db, event)
-        flash("Happening erstellt.", "success")
+        flash("Termin erstellt.", "success")
         return redirect(url_for("list_events"))
     else:
         for field, msg in errors.items():
@@ -123,7 +123,7 @@ def validate(event):
         errors["date"] = u"Ungültiges Datum."
 
     if (event["title"] is None or event["title"].strip() == ""):
-        errors["title"] = "Titel fehlt."
+        errors["title"] = "Speisentitel fehlt."
 
     return errors
 
