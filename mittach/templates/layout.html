@@ -15,6 +15,7 @@
     <header>
       <img src="{{ url_for("static", filename="images/logo.png") }}">
       <p>Mahlzeit, {{ g.current_user }}</p>
+      <p>Mitarbeiter 3 €, Externe 5 €</p>
     </header>
     {% for category, message in get_flashed_messages(true) %}
     <div class="alert alert-{{ category }}">{{ message }}</div>
