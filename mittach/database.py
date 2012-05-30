@@ -42,7 +42,7 @@ def list_events(db, start=None, end=None):
                 "title": db.get("%s:title" % namespace).decode("utf-8"),
                 "details": (db.get("%s:details" % namespace) or "").decode("utf-8"),
                 "slots": slots,
-                "bookings": db.lrange("%s:bookings" % namespace, 0, slots - 1)
+                "bookings": db.lrange("%s:bookings" % namespace, 0, -1)
             }
             events.append(event)
 
@@ -59,7 +59,7 @@ def book_event(db, event_id, username):
     pipe.rpush("%s:bookings" % namespace, username)
     index = pipe.execute()[-1]
 
-    if index <= slots:
+    if slots == -1 or index <= slots:
         return True
     else:
         db.ltrim("%s:bookings" % namespace, 0, slots - 1)
