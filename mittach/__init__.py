@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, with_statement
 import os
 
 from datetime import datetime
+from collections import defaultdict
 
 from flask import Flask, g, request, url_for, make_response, redirect, abort, \
     render_template, flash, render_template_string
@@ -101,11 +102,17 @@ def report_bookings(start, end):
     except ValueError:
         abort(400)
 
-    events = database.list_events(g.db, start, end)
-    events = sorted(["%s: %s" % (format_date(ev["date"]),
-            "; ".join(ev["bookings"])) for ev in events]) # TODO: limit by AuthZ / user
+    events_by_user = defaultdict(lambda: [])
+    for event in database.list_events(g.db, start, end):
+        for username in event["bookings"]: # TODO: limit by AuthZ / user
+            date = format_date(event["date"])
+            events_by_user[username].append(date)
 
-    response = make_response("\n".join(events))
+    rows = ["Mitarbeiter; Anzahl; Details"]
+    rows += [";".join([username, unicode(len(dates)), ", ".join(dates)])
+            for username, dates in events_by_user.items()]
+
+    response = make_response("\n".join(rows))
     response.headers["Content-Type"] = "text/plain"
     return response
 
