@@ -114,6 +114,8 @@ def report_bookings(start, end):
 
     response = make_response("\n".join(rows))
     response.headers["Content-Type"] = "text/plain"
+    response.headers["Content-Disposition"] = "attachment;filename=%s_%s.csv" % (
+            start, end)
     return response
 
 
