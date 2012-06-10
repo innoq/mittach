@@ -5,10 +5,9 @@ set -x
 
 host="internal2.innoq.com"
 
-make dist
 ssh $host 'rm ~/tmp/mittach-*.tar.gz'
 scp dist/mittach-*.tar.gz $host:~/tmp/
 ssh $host 'cd /var/www/internal.innoq.com/mittach/ && ' \
 		'. venv/bin/activate && ' \
 		'pip install -U $HOME/tmp/mittach-*.tar.gz && ' \
-		'sudo apache2ctl restart'
+		'sudo -S apache2ctl restart'
