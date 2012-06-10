@@ -56,9 +56,10 @@ def before_request():
 
     last_month_end = date.today().replace(day=1) - timedelta(days=1)
     last_month_start = last_month_end.replace(day=1)
-    last_month_start, last_month_end = map(lambda d: normalize_date(str(d)),
-            (last_month_start, last_month_end))
-    g.last_month = [last_month_start, last_month_end]
+    g.last_month = {
+        "start": str(last_month_start),
+        "end": str(last_month_end)
+    }
 
 
 @app.teardown_request
