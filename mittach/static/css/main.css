@@ -9,6 +9,11 @@ header p {
   float: right;
 }
 
+nav {
+  float: right;
+  margin-top: -30px;
+}
+
 h2 {
   margin-bottom: 10px;
 }

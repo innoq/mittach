@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, with_statement
 
 import os
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from collections import defaultdict
 
 from flask import Flask, g, request, url_for, make_response, redirect, abort, \
@@ -53,6 +53,12 @@ def before_request():
     if not g.current_user:
         abort(403)
     g.db = database.connect(app.config)
+
+    last_month_end = date.today().replace(day=1) - timedelta(days=1)
+    last_month_start = last_month_end.replace(day=1)
+    last_month_start, last_month_end = map(lambda d: normalize_date(str(d)),
+            (last_month_start, last_month_end))
+    g.last_month = [last_month_start, last_month_end]
 
 
 @app.teardown_request

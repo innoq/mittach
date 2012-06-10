@@ -17,6 +17,9 @@
       <p>Mahlzeit, {{ g.current_user }}</p>
       <p>Mitarbeiter 3 €, Externe 5 €</p>
     </header>
+    <nav>
+        <a href="/reports/{{ g.last_month[0]|format_date }}/{{ g.last_month[1]|format_date }}">Report (letzter Monat)</a>
+    </nav>
     {% for category, message in get_flashed_messages(true) %}
     <div class="alert alert-{{ category }}">{{ message }}</div>
     {% endfor %}
