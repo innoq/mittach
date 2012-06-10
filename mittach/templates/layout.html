@@ -18,8 +18,8 @@
       <p>Mitarbeiter 3 €, Externe 5 €</p>
     </header>
     <nav>
-        <a href="{{ url_for("report_bookings", **g.last_month) }}">
-            Report (letzter Monat)
+        <a href="{{ url_for("report_bookings", start=g.last_month["start"], end=g.last_month["end"]) }}">
+            Report ({{ g.last_month["name"] }})
         </a>
     </nav>
     {% for category, message in get_flashed_messages(true) %}

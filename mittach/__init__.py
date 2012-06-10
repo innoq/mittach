@@ -58,8 +58,9 @@ def before_request():
     last_month_start = last_month_end.replace(day=1)
     g.last_month = {
         "start": str(last_month_start),
-        "end": str(last_month_end)
+        "end": str(last_month_end),
     }
+    g.last_month["name"] = month_name(g.last_month["start"], True)
 
 
 @app.teardown_request
@@ -188,6 +189,28 @@ def format_date(value, include_weekday=False): # XXX: does not belong here
         date += " (%s)" % weekday
 
     return date
+
+
+def month_name(date, include_year=False):
+    """
+    returns the (German) name of the month based on a ISO-8601 date string
+    "2012-03-15" -> "März 2012"
+    """
+    # XXX: partially duplicates `normalize_date`
+    try:
+        assert len(date) == 10
+        assert date[4] == date[7] == "-"
+    except (AssertionError, ValueError):
+        raise ValueError("invalid date format")
+
+    month = int(date[5:7]) - 1 # TODO: use `datetime` for this
+    res = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
+            "August", "September", "Oktober", "November", "Dezember"][month]
+
+    if include_year:
+        res += " %s" % date[0:4] # TODO: use `datetime` for this
+
+    return res
 
 
 def normalize_date(value): # XXX: does not belong here
