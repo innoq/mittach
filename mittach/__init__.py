@@ -105,7 +105,7 @@ def report_bookings(start, end):
     events_by_user = defaultdict(lambda: [])
     for event in database.list_events(g.db, start, end):
         for username in event["bookings"]: # TODO: limit by AuthZ / user
-            date = format_date(event["date"])
+            date = format_date(event["date"], True)
             events_by_user[username].append(date)
 
     rows = ["Mitarbeiter; Anzahl; Details"]
@@ -166,18 +166,21 @@ def cancel_event(event_id):
     return redirect(url_for("list_events"))
 
 
-def format_date(value): # XXX: does not belong here
+def format_date(value, include_weekday=False): # XXX: does not belong here
     """
     converts an ISO-8601-like integer into a date string:
-    20120315 -> "2012-03-15"
+    20120315 -> "2012-03-15 (Donnerstag)"
     """
     date = str(value)
+    date = "%s-%s-%s" % (date[0:4], date[4:6], date[6:8])
 
-    weekday = datetime.strptime(date, "%Y%m%d").weekday()
-    weekday = ("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag",
-            "Samstag", "Sonntag")[weekday]
+    if include_weekday:
+        weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
+        weekday = ("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag",
+                "Samstag", "Sonntag")[weekday]
+        date += " (%s)" % weekday
 
-    return "%s-%s-%s (%s)" % (date[0:4], date[4:6], date[6:8], weekday)
+    return date
 
 
 def normalize_date(value): # XXX: does not belong here
