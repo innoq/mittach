@@ -1,6 +1,6 @@
 header {
   margin-top: 25px;
-  margin-bottom: 40px;
+  margin-bottom: 10px;
   border-bottom: 1px solid #E7E7E7;
 }
 
@@ -11,11 +11,15 @@ header p {
 
 nav {
   float: right;
-  margin-top: -30px;
+  margin-left: 5em;
 }
 
 h2 {
   margin-bottom: 10px;
+}
+
+p.conditions { /* XXX: bad class name */
+  overflow: auto;
 }
 
 tr.details td {

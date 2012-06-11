@@ -22,11 +22,22 @@
             Report ({{ g.last_month["name"] }})
         </a>
     </nav>
+
+    <p class="conditions">
+        Bitte meldet euch verbindlich bis Freitag um 24 Uhr für die darauf
+        folgende Woche an: nach dieser Zahl wird Anja Ihre Einkäufe tätigen.
+        Wenn durch Krankheit oder Kundentermine das Essen nicht in Anspruch
+        genommen werden kann, sollte möglichst kurzfristig, spätestens jedoch am
+        Vortag, storniert werden. Die dadurch frei gewordenen Essen können dann
+        an Interessenten "weitergegeben" werden.
+    </p>
+
     {% for category, message in get_flashed_messages(true) %}
     <div class="alert alert-{{ category }}">{{ message }}</div>
     {% endfor %}
     {% block body %}{% endblock %}
   </div>
+
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
   <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
   <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-popover.js"></script>
