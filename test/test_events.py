@@ -1,6 +1,6 @@
 import os
 
-os.environ["MITTACH_CONFIG_MODE"] = "testing" # FIXME: obsolete
+os.environ["MITTACH_CONFIG_MODE"] = "testing"
 from mittach.web import app, database
 
 
