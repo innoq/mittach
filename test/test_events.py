@@ -7,6 +7,7 @@ from mittach.web import app, database
 class Test(object):
 
     def setup_method(self, method):
+        assert app.config["MODE"] == "testing"
         # reset database
         self.db = database.connect(app.config)
         self.db.flushall()

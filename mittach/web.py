@@ -31,14 +31,19 @@ class RemoteUserMiddleware(object):
         return self.app(environ, start_response)
 
 
-# initialize application -- TODO: move into function
+# initialize application -- TODO: move into function in order to pass parameters like config location
 app = Flask(__package__, instance_relative_config=True)
-try:
-    config = read_config(app.open_instance_resource("config.ini"))
-except IOError: # XXX: temporary workaround until `__init__.py` is nothing but metadata
-    import sys
-    print >> sys.stderr, "[WARNING] bootstrapping configuration"
-    config = { "mode": "development", "secret": None }
+config = {
+    "mode": os.environ.get("MITTACH_CONFIG_MODE"), # XXX: hack for testing; this should not be necessary
+    "secret": None
+}
+if not config["mode"]:
+    try:
+        config = read_config(app.open_instance_resource("config.ini"))
+    except IOError: # XXX: temporary workaround until `__init__.py` is nothing but metadata
+        import sys
+        print >> sys.stderr, "[WARNING] bootstrapping configuration"
+        config["mode"] = "development"
 app.config.from_object("%s.config.%sConfig" % (__package__, config["mode"].capitalize()))
 app.config["MODE"] = config["mode"]
 app.config["SECRET_KEY"] = config["secret"]
