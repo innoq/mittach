@@ -5,5 +5,9 @@
   <label>Details<textarea name="details">{{ new_event.details }}</textarea></label>
   <label>Datum<input type="text" name="date" value="{{ new_event.date }}" class="auto-kal"></label>
   <label>Slots<input type="number" name="slots" min="1" value="{{ new_event.slots }}"></label>
+  <label>
+    <input type="checkbox" name="vegetarian">
+    auch vegetarisch
+  </label>
   <input type="submit" class="btn btn-primary" value="Speichern">
 </form>

@@ -89,7 +89,8 @@ def create_event():
         "date": request.form["date"].replace("-", ""), # TODO: use `normalize_date`
         "title": request.form["title"],
         "details": request.form["details"],
-        "slots": request.form["slots"]
+        "slots": request.form["slots"],
+        "vegetarian": request.form.get("vegetarian")
     }
     errors = validate(event)
     if (len(errors) == 0):
@@ -162,7 +163,8 @@ def handle_booking(event_id):
 
 @app.route("/events/<event_id>/my_booking", methods=["PUT"])
 def book_event(event_id):
-    if database.book_event(g.db, event_id, g.current_user):
+    veg = request.form.get("vegetarian")
+    if database.book_event(g.db, event_id, g.current_user, vegetarian=veg):
         flash("Anmeldung erfolgreich.", "success")
     else:
         flash("Anmeldung nicht erfolgreich.", "error")

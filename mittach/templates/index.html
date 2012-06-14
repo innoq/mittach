@@ -10,7 +10,8 @@
           <tr>
             <th>Speise</th>
             <th>Datum</th>
-            <th>Anmeldungen</th>
+            <th>Anmeldungen
+            <th>davon vegetarisch</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -22,6 +23,7 @@
             </td>
             <td>{{ event.date|format_date(True) }}</td>
             <td>{{ event.bookings|length }}</td>
+            <td>{{ event.vegetarians|length if event.vegetarian else "N/A" }}</td>
             <td>
               {% if g.current_user in event.bookings %}
               <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
@@ -31,6 +33,12 @@
               {% elif event.slots == -1 or event.slots > event.bookings|length %}
               <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
                 <input type="hidden" name="_method" value="put">
+                {% if event.vegetarian %}
+                <label>
+                  <input type="checkbox" name="vegetarian">
+                  vegetarisch
+                </label>
+                {% endif %}
                 <input type="submit" class="btn btn-success" value="Buchen">
               </form>
               {% else %}

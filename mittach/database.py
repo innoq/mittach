@@ -16,6 +16,8 @@ def create_event(db, data):
     pipe.set("%s:title" % namespace, data["title"])
     pipe.set("%s:details" % namespace, data["details"])
     pipe.set("%s:slots" % namespace, data["slots"])
+    if data["vegetarian"]:
+        pipe.set("%s:vegetarian" % namespace, True)
     pipe.execute()
 
     return event_id
@@ -42,6 +44,8 @@ def list_events(db, start=None, end=None):
                 "title": db.get("%s:title" % namespace).decode("utf-8"),
                 "details": (db.get("%s:details" % namespace) or "").decode("utf-8"),
                 "slots": slots,
+                "vegetarian": db.get("%s:vegetarian" % namespace) or False,
+                "vegetarians": db.lrange("%s:vegetarians" % namespace, 0, -1),
                 "bookings": db.lrange("%s:bookings" % namespace, 0, -1)
             }
             events.append(event)
@@ -49,7 +53,7 @@ def list_events(db, start=None, end=None):
     return events # TODO: use generator
 
 
-def book_event(db, event_id, username):
+def book_event(db, event_id, username, vegetarian):
     namespace = "events:%s" % event_id
 
     slots = db.get("%s:slots" % namespace)
@@ -57,9 +61,11 @@ def book_event(db, event_id, username):
     pipe = db.pipeline()
     pipe.lrem("%s:bookings" % namespace, 0, username)
     pipe.rpush("%s:bookings" % namespace, username)
-    index = pipe.execute()[-1]
+    if vegetarian:
+        pipe.rpush("%s:vegetarians" % namespace, username)
+    results = pipe.execute()
 
-    if slots == -1 or index <= slots:
+    if slots == -1 or results[1] <= slots:
         return True
     else:
         db.ltrim("%s:bookings" % namespace, 0, slots - 1)
@@ -68,4 +74,10 @@ def book_event(db, event_id, username):
 
 def cancel_event(db, event_id, username):
     namespace = "events:%s" % event_id
-    return db.lrem("%s:bookings" % namespace, 0, username) > 0
+
+    pipe = db.pipeline()
+    pipe.lrem("%s:bookings" % namespace, 0, username)
+    pipe.lrem("%s:vegetarians" % namespace, 0, username)
+    results = pipe.execute()
+
+    return results[0] > 0

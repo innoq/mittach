@@ -31,3 +31,9 @@ tr.details td {
 .kalendae a:hover {
   text-decoration: none;
 }
+
+label input[type="checkbox"],
+label input[type="radio"] {
+  display: inline;
+  margin-right: 0.5em;
+}
