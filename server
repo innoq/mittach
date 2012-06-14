@@ -12,7 +12,7 @@ import os
 
 
 def main(args):
-    from mittach import app
+    from mittach.web import app
     print "[INFO] starting in %s mode" % app.config["MODE"]
     app.run()
 

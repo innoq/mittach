@@ -1,1 +1,1 @@
-from mittach import app as application
+from mittach.web import app as application

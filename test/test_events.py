@@ -1,7 +1,7 @@
 import os
 
-os.environ["MITTACH_CONFIG_MODE"] = "testing" # XXX: duplicates mittach.NAME
-from mittach import app, database
+os.environ["MITTACH_CONFIG_MODE"] = "testing" # FIXME: obsolete
+from mittach.web import app, database
 
 
 class Test(object):
