@@ -17,7 +17,7 @@
         </thead>
         <tbody>
           {% for event in events %}
-          <tr>
+          <tr id="event_{{ event.id }}">
             <td data-popover-title="Teilnehmer" data-popover-content="{{ event.bookings|join(', ')|default('Es haben sich noch keine Teilnehmer angemeldet', true) }}">
               <a href="#">{{ event.title }}</a>
             </td>
