@@ -18,8 +18,8 @@ h2 {
   margin-bottom: 10px;
 }
 
-p.conditions { /* XXX: bad class name */
-  overflow: auto;
+.alert {
+  overflow: auto; /* block formatting context */
 }
 
 tr.details td {
