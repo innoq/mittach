@@ -10,4 +10,4 @@ scp dist/mittach-*.tar.gz $host:~/tmp/
 ssh $host 'cd /var/www/internal.innoq.com/mittach/ && ' \
 		'. venv/bin/activate && ' \
 		'pip install -U $HOME/tmp/mittach-*.tar.gz && ' \
-		'sudo -S apache2ctl restart'
+		'touch /var/www/internal.innoq.com/mittach/app.wsgi'
