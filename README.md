@@ -13,6 +13,7 @@ Installation
 * Python >= 2.5
 * [pip](http://www.pip-installer.org/en/latest/installing.html)
 * virtualenv `sudo pip install virtualenv`
+* Redis >= 2.4
 
 ### Entwicker-Setup
 
