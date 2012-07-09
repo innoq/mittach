@@ -15,7 +15,7 @@ from . import database
 
 
 NAME = "Mittach" # XXX: unnecessary?
-
+ADMINS = {'hendrik11'}
 
 class RemoteUserMiddleware(object):
     """
@@ -78,15 +78,19 @@ def root():
 
 @app.route("/admin")
 def admin():
-    events = database.list_events(g.db)
-    sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
-    return render_template("admin.html", events=sortedEvents, new_event={})
+    if g.current_user in ADMINS:
+        events = database.list_events(g.db)
+        sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
+        return render_template("admin.html", events=sortedEvents, new_event={})
+    else:
+        return render_template_string(u'{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} <p>Du besitzt nicht die benötigten Rechte für diese Seite. <a href="{{ url_for("list_events") }}">Zurück zur Übersicht</a></p> {% endblock %}')
 
 @app.route("/events")
 def list_events():
     events = database.list_events(g.db)
     sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
     return render_template("index.html", events=sortedEvents, new_event={})
+
 
 
 @app.route("/events", methods=["POST"])
@@ -160,11 +164,11 @@ def validate(event):
     for e in database.list_events(g.db):
         prevdates.append(int(e["date"]))
 
-    print date
-    print prevdates
-
-    if int(date) in prevdates:
-        errors["date"] = "Speise an diesem Datum schon vorhanden."
+    try:
+        if int(date) in prevdates:
+            errors["date"] = "Speise an diesem Datum schon vorhanden."
+    except:
+        pass
 
     return errors
 
@@ -185,7 +189,31 @@ def delete_event(event_id):
         flash("Loeschen nicht erfolgreich.", "error")
     return redirect(url_for("admin"))
 
-# Edit Event: get altes, set neues, das überschreibt dann
+
+@app.route("/admin/<event_id>/edit", methods=["POST"])
+def edit_event(event_id):
+    event = database.get_event(g.db, event_id)
+    return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event)
+
+@app.route("/admin/<event_id>/save", methods=["POST"])
+def save_edit_event():
+    event = {
+        "date": request.form["date"].replace("-", ""), # TODO: use `normalize_date`
+        "title": request.form["title"],
+        "details": request.form["details"],
+        "slots": request.form["slots"],
+        "vegetarian": request.form.get("vegetarian")
+    }
+    errors = validate(event)
+    if (len(errors) == 0):
+        database.edit_event(g.db, request.form["id"], event)
+        flash("Termin erstellt.", "success")
+        return redirect(url_for("list_events"))
+    else:
+        for field, msg in errors.items():
+            flash(msg, "error")
+        return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event)
+
 
 @app.route("/events/<event_id>/my_booking", methods=["PUT"])
 def book_event(event_id):

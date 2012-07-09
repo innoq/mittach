@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
-
+{% block alerts %}{% endblock %}
 {% block body %}
 <div class="row">
   <div class="span8">
-    <h2>Aktuelle Termine</h2>
+    <h2>Admin</h2>
     <div class="well">
       <table class="table">
         <thead>
@@ -26,8 +26,12 @@
             <td>{{ event.vegetarians|length if event.vegetarian else "N/A" }}</td>
             <td>
               <form method="post" action="{{ url_for("delete_event", event_id=event.id) }}">
-                <input type="hidden" name="_method" value="delete">
                 <input type="submit" class="btn btn-danger" value="Löschen">
+              </form>
+            </td>
+            <td>
+              <form method="post" action="{{ url_for("edit_event", event_id=event.id) }}">
+                <input type="submit" class="btn btn-warning" value="Bearbeiten">
               </form>
             </td>
           </tr>
@@ -41,6 +45,9 @@
   </div>
   <div class="span4">
     {% include "create_event.html" %}
+      <form method="get" action="{{ url_for("list_events") }}">
+      <input type="submit" class="btn btn-success" value="Admin verlassen">
+      </form>
   </div>
 </div>
 {% endblock %}

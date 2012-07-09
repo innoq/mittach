@@ -22,7 +22,7 @@
             Report ({{ g.last_month["name"] }})
         </a>
     </nav>
-
+{% block alerts %}
     <p class="alert alert-info">
         Bei Fragen oder Anregungen wendet euch bitte an
         <a href="mailto:anja.angermann@innoq.com">Anja</a>
@@ -35,6 +35,7 @@
         Vortag, storniert werden. Die dadurch frei gewordenen Essen können dann
         an Interessenten "weitergegeben" werden.
     </p>
+{% endblock %}
 
     {% for category, message in get_flashed_messages(true) %}
     <div class="alert alert-{{ category }}">{{ message }}</div>

@@ -72,15 +72,48 @@ def book_event(db, event_id, username, vegetarian):
         return False
 
 def delete_event(db, event_id):
+    namespace = "events:%s" % event_id
     try:
         pipe = db.pipeline()
         pipe.lrem("events", 1, event_id)
+        pipe.lrem("%s:" % namespace, 1, "date")
+        pipe.lrem("%s:" % namespace, 1, "title")
+        pipe.lrem("%s:" % namespace, 1, "details")
+        pipe.lrem("%s:" % namespace, 1, "slots")
         results = pipe.execute()
         erg = True
     except:
         erg = False
 
     return erg
+
+def get_event(db, event_id):
+    namespace = "events:%s" % event_id
+
+    data = {
+        "id": event_id,
+        "date": db.get("%s:date" % namespace),
+        "title": db.get("%s:title" % namespace),
+        "details": db.get("%s:details" % namespace),
+        "slots": db.get("%s:slots" % namespace),
+        "vegetarian": db.get("%s:vegetarian" % namespace)
+    }
+    if data["vegetarian"] == None:
+        data["vegetarian"] = False
+
+    return data
+
+def edit_event(db, event_id, data):
+    namespace = "events:%s" % event_id
+
+    pipe = db.pipeline()
+    pipe.set("%s:date" % namespace, data["date"])
+    pipe.set("%s:title" % namespace, data["title"])
+    pipe.set("%s:details" % namespace, data["details"])
+    pipe.set("%s:slots" % namespace, data["slots"])
+    if data["vegetarian"]:
+        pipe.set("%s:vegetarian" % namespace, True)
+    pipe.execute()
 
 
 def cancel_event(db, event_id, username):
