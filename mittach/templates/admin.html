@@ -12,7 +12,7 @@
             <th>Datum</th>
             <th>Anmeldungen
             <th>davon vegetarisch</th>
-            <th>Status</th>
+            <th>Aktion</th>
           </tr>
         </thead>
         <tbody>
@@ -25,25 +25,10 @@
             <td>{{ event.bookings|length }}</td>
             <td>{{ event.vegetarians|length if event.vegetarian else "N/A" }}</td>
             <td>
-              {% if g.current_user in event.bookings %}
-              <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
+              <form method="post" action="{{ url_for("delete_event", event_id=event.id) }}">
                 <input type="hidden" name="_method" value="delete">
-                <input type="submit" class="btn btn-danger" value="Stornieren">
+                <input type="submit" class="btn btn-danger" value="Löschen">
               </form>
-              {% elif event.slots == -1 or event.slots > event.bookings|length %}
-              <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
-                <input type="hidden" name="_method" value="put">
-                {% if event.vegetarian %}
-                <label>
-                  <input type="checkbox" name="vegetarian">
-                  vegetarisch
-                </label>
-                {% endif %}
-                <input type="submit" class="btn btn-success" value="Buchen">
-              </form>
-              {% else %}
-              ausgebucht
-              {% endif %}
             </td>
           </tr>
           <tr class="details">
@@ -56,9 +41,6 @@
   </div>
   <div class="span4">
     {% include "create_event.html" %}
-      <form method="get" action="{{ url_for("admin") }}">
-      <input type="submit" class="btn btn-success" value="Admin">
-      </form>
   </div>
 </div>
 {% endblock %}
