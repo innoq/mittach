@@ -76,11 +76,17 @@ def teardown_request(exc):
 def root():
     return redirect(url_for("list_events"))
 
+@app.route("/admin")
+def admin():
+    events = database.list_events(g.db)
+    sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
+    return render_template("admin.html", events=sortedEvents, new_event={})
 
 @app.route("/events")
 def list_events():
     events = database.list_events(g.db)
-    return render_template("index.html", events=events, new_event={})
+    sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
+    return render_template("index.html", events=sortedEvents, new_event={})
 
 
 @app.route("/events", methods=["POST"])
@@ -150,6 +156,16 @@ def validate(event):
     if (event["title"] is None or event["title"].strip() == ""):
         errors["title"] = "Speisentitel fehlt."
 
+    prevdates = []
+    for e in database.list_events(g.db):
+        prevdates.append(int(e["date"]))
+
+    print date
+    print prevdates
+
+    if int(date) in prevdates:
+        errors["date"] = "Speise an diesem Datum schon vorhanden."
+
     return errors
 
 
@@ -160,6 +176,16 @@ def handle_booking(event_id):
     else:
         return book_event(event_id)
 
+
+@app.route("/admin/<event_id>/delete", methods=["POST"])
+def delete_event(event_id):
+    if database.delete_event(g.db, event_id):
+        flash("Loeschen erfolgreich.", "success")
+    else:
+        flash("Loeschen nicht erfolgreich.", "error")
+    return redirect(url_for("admin"))
+
+# Edit Event: get altes, set neues, das überschreibt dann
 
 @app.route("/events/<event_id>/my_booking", methods=["PUT"])
 def book_event(event_id):

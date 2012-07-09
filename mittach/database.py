@@ -71,6 +71,17 @@ def book_event(db, event_id, username, vegetarian):
         db.ltrim("%s:bookings" % namespace, 0, slots - 1)
         return False
 
+def delete_event(db, event_id):
+    try:
+        pipe = db.pipeline()
+        pipe.lrem("events", 1, event_id)
+        results = pipe.execute()
+        erg = True
+    except:
+        erg = False
+
+    return erg
+
 
 def cancel_event(db, event_id, username):
     namespace = "events:%s" % event_id
