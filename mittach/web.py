@@ -170,6 +170,18 @@ def validate(event):
     except:
         pass
 
+    date_now = datetime.now().strftime("%Y%m%d")
+    errmsg = "Datum schon vergangen."
+
+    if date[0:4] < date_now[0:4]:
+        errors["date"] = errmsg
+    elif date[0:4] == date_now[0:4]:
+        if date[4:6] < date_now[4:6]:
+            errors["date"] = errmsg
+        elif date[4:6] == date_now[4:6]:
+            if date[6:8] < date_now[6:8]:
+                errors["date"] = errmsg
+
     return errors
 
 
