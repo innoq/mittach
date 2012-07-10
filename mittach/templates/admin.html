@@ -41,11 +41,14 @@
           {% endfor %}
         </tbody>
       </table>
+        {% for pagenr in cpages %}
+            <a href="{{ url_for("list_events", page=pagenr) }}">{{ pagenr }}</a>
+        {% endfor %}
     </div>
   </div>
   <div class="span4">
     {% include "create_event.html" %}
-      <form method="get" action="{{ url_for("list_events") }}">
+      <form method="get" action="{{ url_for("list_events", page=1) }}">
       <input type="submit" class="btn btn-success" value="Admin verlassen">
       </form>
   </div>

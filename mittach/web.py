@@ -6,6 +6,7 @@ import os
 
 from datetime import date, datetime, timedelta
 from collections import defaultdict
+from math import ceil
 
 from flask import Flask, g, request, url_for, make_response, redirect, abort, \
     render_template, flash, render_template_string
@@ -16,7 +17,7 @@ from . import database
 
 NAME = "Mittach" # XXX: unnecessary?
 ADMINS = {'hendrik11'}
-
+MAXEVENTS = 15 # Max vents on one page
 class RemoteUserMiddleware(object):
     """
     WSGI middleware to inject a REMOTE_USER for debugging purposes
@@ -74,22 +75,38 @@ def teardown_request(exc):
 
 @app.route("/")
 def root():
-    return redirect(url_for("list_events"))
-
-@app.route("/admin")
-def admin():
-    if g.current_user in ADMINS:
-        events = database.list_events(g.db)
-        sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
-        return render_template("admin.html", events=sortedEvents, new_event={})
-    else:
-        return render_template_string(u'{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} <p>Du besitzt nicht die benötigten Rechte für diese Seite. <a href="{{ url_for("list_events") }}">Zurück zur Übersicht</a></p> {% endblock %}')
+    return redirect(url_for("list_events", page=1))
 
 @app.route("/events")
-def list_events():
+def root_events():
+    return redirect(url_for("list_events", page=1))
+
+@app.route("/admin/<page>")
+def admin(page):
+    if g.current_user in ADMINS:
+        countpages = int(ceil(database.get_count_events(g.db) / MAXEVENTS))
+        pages = []
+        for i in range(1,countpages+1):
+            pages.append(i)
+        start = MAXEVENTS*(int(page)-1)
+        events = database.list_events(g.db)
+        sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
+        sortedEvents = sortedEvents[start:start+MAXEVENTS]
+        return render_template("admin.html", events=sortedEvents, new_event={}, cpages=pages)
+    else:
+        return render_template_string(u'{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} <p>Du besitzt nicht die benötigten Rechte für diese Seite. <a href="{{ url_for("list_events", 1) }}">Zurück zur Übersicht</a></p> {% endblock %}')
+
+@app.route("/events/<page>")
+def list_events(page):
+    countpages = int(ceil(database.get_count_events(g.db) / MAXEVENTS))
+    pages = []
+    for i in range(1,countpages+1):
+        pages.append(i)
+    start = MAXEVENTS*(int(page)-1)
     events = database.list_events(g.db)
     sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
-    return render_template("index.html", events=sortedEvents, new_event={})
+    sortedEvents = sortedEvents[start:start+MAXEVENTS]
+    return render_template("index.html", events=sortedEvents, new_event={}, cpages=pages)
 
 
 
@@ -106,7 +123,7 @@ def create_event():
     if (len(errors) == 0):
         database.create_event(g.db, event)
         flash("Termin erstellt.", "success")
-        return redirect(url_for("list_events"))
+        return redirect(url_for("list_events", page=1))
     else:
         for field, msg in errors.items():
             flash(msg, "error")
@@ -199,15 +216,15 @@ def delete_event(event_id):
         flash("Loeschen erfolgreich.", "success")
     else:
         flash("Loeschen nicht erfolgreich.", "error")
-    return redirect(url_for("admin"))
+    return redirect(url_for("admin", page=1))
 
 
-@app.route("/admin/<event_id>/edit", methods=["POST"])
+@app.route("/admin/event/<event_id>/edit", methods=["POST"])
 def edit_event(event_id):
     event = database.get_event(g.db, event_id)
     return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event)
 
-@app.route("/admin/<event_id>/save", methods=["POST"])
+@app.route("/admin/event/<event_id>/save", methods=["POST"])
 def save_edit_event():
     event = {
         "date": request.form["date"].replace("-", ""), # TODO: use `normalize_date`
@@ -220,7 +237,7 @@ def save_edit_event():
     if (len(errors) == 0):
         database.edit_event(g.db, request.form["id"], event)
         flash("Termin erstellt.", "success")
-        return redirect(url_for("list_events"))
+        return redirect(url_for("list_events", page=1))
     else:
         for field, msg in errors.items():
             flash(msg, "error")
@@ -234,7 +251,7 @@ def book_event(event_id):
         flash("Anmeldung erfolgreich.", "success")
     else:
         flash("Anmeldung nicht erfolgreich.", "error")
-    return redirect(url_for("list_events"))
+    return redirect(url_for("list_events", page=1))
 
 
 @app.route("/events/<event_id>/my_booking", methods=["DELETE"])
@@ -243,7 +260,7 @@ def cancel_event(event_id):
         flash("Abmeldung erfolgreich.", "success")
     else:
         flash("Abmeldung nicht erfolgreich.", "error")
-    return redirect(url_for("list_events"))
+    return redirect(url_for("list_events", page=1))
 
 
 def format_date(value, include_weekday=False): # XXX: does not belong here
