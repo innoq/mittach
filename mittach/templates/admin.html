@@ -42,7 +42,11 @@
         </tbody>
       </table>
         {% for pagenr in cpages %}
-            <a href="{{ url_for("list_events", page=pagenr) }}">{{ pagenr }}</a>
+            {% if pagenr != current_page %}
+                <a href="{{ url_for("admin", page=pagenr) }}">{{ pagenr }}</a>
+            {% else %}
+              {{ pagenr }}
+             {% endif %}
         {% endfor %}
     </div>
   </div>

@@ -94,7 +94,7 @@ def admin(page):
         events = database.list_events(g.db)
         sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
         sortedEvents = sortedEvents[start:start+MAXEVENTS]
-        return render_template("admin.html", events=sortedEvents, new_event={}, cpages=pages)
+        return render_template("admin.html", events=sortedEvents, new_event={}, cpages=pages, current_page=int(page))
     else:
         return render_template_string(u'{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} <p>Du besitzt nicht die benötigten Rechte für diese Seite. <a href="{{ url_for("list_events", page=1) }}">Zurück zur Übersicht</a></p> {% endblock %}')
 
@@ -108,7 +108,7 @@ def list_events(page):
     events = database.list_events(g.db)
     sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
     sortedEvents = sortedEvents[start:start+MAXEVENTS]
-    return render_template("index.html", events=sortedEvents, new_event={}, cpages=pages)
+    return render_template("index.html", events=sortedEvents, new_event={}, cpages=pages, current_page=int(page))
 
 
 
@@ -174,18 +174,17 @@ def validate(event, new=True):
     try:
         assert len(date) == 8
         int(date)
-        if new == True:
-            date_now = datetime.now().strftime("%Y%m%d")
-            errmsg = "Datum schon vergangen."
+        date_now = datetime.now().strftime("%Y%m%d")
+        errmsg = "Datum schon vergangen."
 
-            if date[0:4] < date_now[0:4]:
+        if date[0:4] < date_now[0:4]:
+            errors["date"] = errmsg
+        elif date[0:4] == date_now[0:4]:
+            if date[4:6] < date_now[4:6]:
                 errors["date"] = errmsg
-            elif date[0:4] == date_now[0:4]:
-                if date[4:6] < date_now[4:6]:
+            elif date[4:6] == date_now[4:6]:
+                if date[6:8] < date_now[6:8]:
                     errors["date"] = errmsg
-                elif date[4:6] == date_now[4:6]:
-                    if date[6:8] < date_now[6:8]:
-                        errors["date"] = errmsg
     except (AssertionError, ValueError):
         errors["date"] = u"Ungültiges Datum."
 
