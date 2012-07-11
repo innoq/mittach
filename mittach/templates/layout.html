@@ -13,7 +13,7 @@
 <body>
   <div class="container">
     <header>
-      <img src="{{ url_for("static", filename="images/logo.png") }}">
+      <a href="{{ url_for("list_events", page=1) }}"> <img src="{{ url_for("static", filename="images/logo.png") }}"></a>
       <p>Mahlzeit, {{ g.current_user }}</p>
       <p>Mitarbeiter 3 €, Externe 5 €</p>
     </header>
