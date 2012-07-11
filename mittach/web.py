@@ -225,16 +225,16 @@ def handle_booking(event_id):
         else:
             return book_event(event_id)
     else:
-        flash(u"Buchungen sind nicht mehr änderbar. Bitte Anja fragen, wenn trotzdem etwas geändert werden soll", "error")
+        flash(u"Buchungen sind nicht mehr änderbar. Bitte Anja oder eienen Admin fragen, wenn trotzdem etwas geändert werden soll.", "error")
         return redirect(url_for("list_events", page=1))
 
 
 @app.route("/admin/<event_id>/delete", methods=["POST"])
 def delete_event(event_id):
     if database.delete_event(g.db, event_id):
-        flash("Loeschen erfolgreich.", "success")
+        flash(u"Löschen erfolgreich.", "success")
     else:
-        flash("Loeschen nicht erfolgreich.", "error")
+        flash(u"Löschen nicht erfolgreich.", "error")
     return redirect(url_for("admin", page=1))
 
 
@@ -286,21 +286,26 @@ def cancel_event(event_id):
 
 @app.route("/admin/events/<event_id>/cancel_booking", methods=["POST"])
 def cancel_event_admin(event_id):
-    bookings = database.get_bookings(g.db, event_id)
-    return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_bookings.html" %} {% endblock %}', bookings=bookings, e_id =event_id)
+    a_bookings = database.get_bookings(g.db, event_id)
+    return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_bookings.html" %} {% endblock %}', bookings=a_bookings, e_id=event_id)
 
 
-@app.route("/admin/events/<event_id>/cancel_booking/save", methods=["POST"])
+@app.route("/admin/events/<event_id>/cancel_booking/edit", methods=["POST"])
 def cancel_event_admin_save(event_id):
     user = request.form["user"]
     bookings = database.get_bookings(g.db, event_id)
-    if user not in bookings:
-        flash("User nicht in Buchungen vorhanden", "error")
-        return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_bookings.html" %} {% endblock %}', bookings=bookings, e_id =event_id)
-    elif database.cancel_event(g.db, event_id, g.current_user):
-        flash("Abmeldung erfolgreich.", "success")
+    if request.form.get("_method"):
+        if user not in bookings:
+            flash("User nicht in Buchungen vorhanden", "error")
+            return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_bookings.html" %} {% endblock %}', bookings=bookings, e_id =event_id)
+        elif database.cancel_event(g.db, event_id, user):
+            flash("Abmeldung erfolgreich.", "success")
+        else:
+            flash("Abmeldung nicht erfolgreich.", "error")
+    elif database.book_event(g.db, event_id, user, vegetarian=False):
+        flash("Anmeldung erfolgreich.", "success")
     else:
-        flash("Abmeldung nicht erfolgreich.", "error")
+        flash("Anmeldung nicht erfolgreich.", "error")
     return redirect(url_for("admin", page=1))
 
 
