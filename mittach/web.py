@@ -17,7 +17,9 @@ from . import database
 
 NAME = "Mittach" # XXX: unnecessary?
 ADMINS = {'hendrik11'}
-MAXEVENTS = 15 # Max vents on one page
+MAXEVENTS = 10 # Max events on one page
+
+
 class RemoteUserMiddleware(object):
     """
     WSGI middleware to inject a REMOTE_USER for debugging purposes
@@ -94,7 +96,7 @@ def admin(page):
         sortedEvents = sortedEvents[start:start+MAXEVENTS]
         return render_template("admin.html", events=sortedEvents, new_event={}, cpages=pages)
     else:
-        return render_template_string(u'{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} <p>Du besitzt nicht die benötigten Rechte für diese Seite. <a href="{{ url_for("list_events", 1) }}">Zurück zur Übersicht</a></p> {% endblock %}')
+        return render_template_string(u'{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} <p>Du besitzt nicht die benötigten Rechte für diese Seite. <a href="{{ url_for("list_events", page=1) }}">Zurück zur Übersicht</a></p> {% endblock %}')
 
 @app.route("/events/<page>")
 def list_events(page):
@@ -113,7 +115,7 @@ def list_events(page):
 @app.route("/events", methods=["POST"])
 def create_event():
     event = {
-        "date": request.form["date"].replace("-", ""), # TODO: use `normalize_date`
+        "date": str(normalize_date(request.form["date"])),
         "title": request.form["title"],
         "details": request.form["details"],
         "slots": request.form["slots"],
@@ -127,6 +129,7 @@ def create_event():
     else:
         for field, msg in errors.items():
             flash(msg, "error")
+        event["date"] = format_date(event["date"])
         return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
 
 
@@ -159,7 +162,7 @@ def report_bookings(start, end):
     return response
 
 
-def validate(event):
+def validate(event, new=True):
     errors = {}
 
     try:
@@ -171,43 +174,60 @@ def validate(event):
     try:
         assert len(date) == 8
         int(date)
+        if new == True:
+            date_now = datetime.now().strftime("%Y%m%d")
+            errmsg = "Datum schon vergangen."
+
+            if date[0:4] < date_now[0:4]:
+                errors["date"] = errmsg
+            elif date[0:4] == date_now[0:4]:
+                if date[4:6] < date_now[4:6]:
+                    errors["date"] = errmsg
+                elif date[4:6] == date_now[4:6]:
+                    if date[6:8] < date_now[6:8]:
+                        errors["date"] = errmsg
     except (AssertionError, ValueError):
         errors["date"] = u"Ungültiges Datum."
 
     if (event["title"] is None or event["title"].strip() == ""):
         errors["title"] = "Speisentitel fehlt."
 
-    prevdates = []
-    for e in database.list_events(g.db):
-        prevdates.append(int(e["date"]))
+    if new == True:
+        prevdates = []
+        for e in database.list_events(g.db):
+            prevdates.append(int(e["date"]))
 
-    try:
-        if int(date) in prevdates:
-            errors["date"] = "Speise an diesem Datum schon vorhanden."
-    except:
-        pass
-
-    date_now = datetime.now().strftime("%Y%m%d")
-    errmsg = "Datum schon vergangen."
-
-    if date[0:4] < date_now[0:4]:
-        errors["date"] = errmsg
-    elif date[0:4] == date_now[0:4]:
-        if date[4:6] < date_now[4:6]:
-            errors["date"] = errmsg
-        elif date[4:6] == date_now[4:6]:
-            if date[6:8] < date_now[6:8]:
-                errors["date"] = errmsg
+        try:
+            if int(date) in prevdates:
+                errors["date"] = "Speise an diesem Datum schon vorhanden."
+        except:
+            pass
 
     return errors
 
 
 @app.route("/events/<event_id>/my_booking", methods=["POST"])
 def handle_booking(event_id):
-    if request.form.get("_method", "PUT").upper() == "DELETE":
-        return cancel_event(event_id)
+    date_now = datetime.now().strftime("%Y%m%d")
+    date = g.db.get("events:%s:date" % event_id)
+    err = False
+
+    if date[0:4] < date_now[0:4]:
+        err = True
+    elif date[0:4] == date_now[0:4]:
+        if date[4:6] < date_now[4:6]:
+            err = True
+        elif date[4:6] == date_now[4:6]:
+            if date[6:8] < date_now[6:8]:
+                err = True
+    if err == False:
+        if request.form.get("_method", "PUT").upper() == "DELETE":
+            return cancel_event(event_id)
+        else:
+            return book_event(event_id)
     else:
-        return book_event(event_id)
+        flash(u"Buchungen sind nicht mehr änderbar", "error")
+        return redirect(url_for("list_events", page=1))
 
 
 @app.route("/admin/<event_id>/delete", methods=["POST"])
@@ -219,29 +239,31 @@ def delete_event(event_id):
     return redirect(url_for("admin", page=1))
 
 
-@app.route("/admin/event/<event_id>/edit", methods=["POST"])
+@app.route("/admin/events/<event_id>", methods=["POST"])
 def edit_event(event_id):
     event = database.get_event(g.db, event_id)
-    return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event)
+    event["date"] = format_date(event["date"])
+    return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event, e_id=event_id)
 
-@app.route("/admin/event/<event_id>/save", methods=["POST"])
-def save_edit_event():
+@app.route("/admin/events/<event_id>/save", methods=["POST"])
+def save_edit_event(event_id):
     event = {
-        "date": request.form["date"].replace("-", ""), # TODO: use `normalize_date`
+        "date": str(normalize_date(request.form["date"])),
         "title": request.form["title"],
         "details": request.form["details"],
         "slots": request.form["slots"],
         "vegetarian": request.form.get("vegetarian")
     }
-    errors = validate(event)
+    errors = validate(event, new=False)
     if (len(errors) == 0):
-        database.edit_event(g.db, request.form["id"], event)
-        flash("Termin erstellt.", "success")
-        return redirect(url_for("list_events", page=1))
+        database.edit_event(g.db, event_id, event)
+        flash(u"Termin erfolgreich geändert.", "success")
+        return redirect(url_for("admin", page=1))
     else:
         for field, msg in errors.items():
             flash(msg, "error")
-        return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event)
+        event["date"] = format_date(event["date"])
+        return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event, e_id =event_id)
 
 
 @app.route("/events/<event_id>/my_booking", methods=["PUT"])

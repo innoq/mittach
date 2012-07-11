@@ -37,7 +37,6 @@ def list_events(db, start=None, end=None):
     events = []
     for event_id in event_ids: # XXX: use `map`?
         namespace = "events:%s" % event_id
-        print event_id
         date = int(db.get("%s:date" % namespace))
         if not scoped or start <= date <= end:
             slots = int(db.get("%s:slots" % namespace))

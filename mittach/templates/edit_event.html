@@ -1,6 +1,6 @@
 <h2>Editiere Termin</h2>
 
-<form method="post" action="{{ url_for("create_event") }}" class="well">
+<form method="post" action="{{ url_for("save_edit_event", page=1, event_id=e_id) }}" class="well">
   <input type="hidden" name="id" value="{{ new_event.id }}">
   <label>Speise<input type="text" name="title" value="{{ new_event.title }}"></label>
   <label>Details<textarea name="details">{{ new_event.details }}</textarea></label>

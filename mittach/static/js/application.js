@@ -11,22 +11,22 @@
 		});
 	});
 
-	$("table").on("submit", "form", function(ev) {
-		var form = $(this);
-		var uri = form.attr("action");
-		var data = $(this).serialize();
-		var id = form.closest("tr").attr("id");
-		if(!id) {
-			return true;
-		}
-		var button = $("input[type=submit]", form).prop("disabled", true);
-		$.post(uri, data, function(html, status, xhr) {
-			var selector = "#" + id;
-			var item = $(html).find(selector);
-			$(selector).replaceWith(item);
-			button.prop("disabled", false); // not actually necessary due to replacement
-		});
-		ev.preventDefault();
-	});
+//	$("table").on("submit", "form", function(ev) {
+//		var form = $(this);
+//		var uri = form.attr("action");
+//		var data = $(this).serialize();
+//		var id = form.closest("tr").attr("id");
+//		if(!id) {
+//			return true;
+//		}
+//		var button = $("input[type=submit]", form).prop("disabled", true);
+//		$.post(uri, data, function(html, status, xhr) {
+//			var selector = "#" + id;
+//			var item = $(html).find(selector);
+//			$(selector).replaceWith(item);
+//			button.prop("disabled", false); // not actually necessary due to replacement
+//		});
+//		ev.preventDefault();
+//	});
 
 }(jQuery));
