@@ -225,7 +225,7 @@ def handle_booking(event_id):
         else:
             return book_event(event_id)
     else:
-        flash(u"Buchungen sind nicht mehr änderbar", "error")
+        flash(u"Buchungen sind nicht mehr änderbar. Bitte Anja fragen, wenn trotzdem etwas geändert werden soll", "error")
         return redirect(url_for("list_events", page=1))
 
 
@@ -238,7 +238,7 @@ def delete_event(event_id):
     return redirect(url_for("admin", page=1))
 
 
-@app.route("/admin/events/<event_id>", methods=["POST"])
+@app.route("/admin/events/<event_id>/edit", methods=["POST"])
 def edit_event(event_id):
     event = database.get_event(g.db, event_id)
     event["date"] = format_date(event["date"])
@@ -282,6 +282,27 @@ def cancel_event(event_id):
     else:
         flash("Abmeldung nicht erfolgreich.", "error")
     return redirect(url_for("list_events", page=1))
+
+
+@app.route("/admin/events/<event_id>/cancel_booking", methods=["POST"])
+def cancel_event_admin(event_id):
+    bookings = database.get_bookings(g.db, event_id)
+    return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_bookings.html" %} {% endblock %}', bookings=bookings, e_id =event_id)
+
+
+@app.route("/admin/events/<event_id>/cancel_booking/save", methods=["POST"])
+def cancel_event_admin_save(event_id):
+    user = request.form["user"]
+    bookings = database.get_bookings(g.db, event_id)
+    if user not in bookings:
+        flash("User nicht in Buchungen vorhanden", "error")
+        return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_bookings.html" %} {% endblock %}', bookings=bookings, e_id =event_id)
+    elif database.cancel_event(g.db, event_id, g.current_user):
+        flash("Abmeldung erfolgreich.", "success")
+    else:
+        flash("Abmeldung nicht erfolgreich.", "error")
+    return redirect(url_for("admin", page=1))
+
 
 
 def format_date(value, include_weekday=False): # XXX: does not belong here

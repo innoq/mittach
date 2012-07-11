@@ -34,6 +34,11 @@
                 <input type="submit" class="btn btn-warning" value="Bearbeiten">
               </form>
             </td>
+            <td>
+              <form method="post" action="{{ url_for("cancel_event_admin", event_id=event.id) }}">
+                <input type="submit" class="btn btn-warning" value="Buchungen ändern">
+              </form>
+            </td>
           </tr>
           <tr class="details">
             <td colspan="4">{{ event.details }}</td>

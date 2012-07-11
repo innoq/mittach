@@ -54,6 +54,9 @@ def list_events(db, start=None, end=None):
 
     return events # TODO: use generator
 
+def get_bookings(db,event_id):
+    namespace = "events:%s" % event_id
+    return db.lrange("%s:bookings" % namespace, 0, -1)
 
 def book_event(db, event_id, username, vegetarian):
     namespace = "events:%s" % event_id
