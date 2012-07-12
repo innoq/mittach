@@ -14,10 +14,17 @@ from flask import Flask, g, request, url_for, make_response, redirect, abort, \
 from .config import read_config
 from . import database
 
+from flask import current_app
 
 NAME = "Mittach" # XXX: unnecessary?
-ADMINS = {'hendrik11'}
+ADMINS = ["oberschulte", "hendrik11"]
 MAXEVENTS = 10 # Max events on one page
+
+
+
+def debug():
+    assert current_app.debug == False, "Don't panic! You're here by request of debug()"
+
 
 
 class RemoteUserMiddleware(object):
@@ -115,7 +122,7 @@ def list_events(page):
 @app.route("/events", methods=["POST"])
 def create_event():
     event = {
-        "date": str(normalize_date(request.form["date"])),
+        "date": request.form["date"],
         "title": request.form["title"],
         "details": request.form["details"],
         "slots": request.form["slots"],
@@ -129,7 +136,7 @@ def create_event():
     else:
         for field, msg in errors.items():
             flash(msg, "error")
-        event["date"] = format_date(event["date"])
+        
         return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
 
 
@@ -172,24 +179,16 @@ def validate(event, new=True):
 
     date = event["date"]
     try:
-        assert len(date) == 8
-        int(date)
-        date_now = datetime.now().strftime("%Y%m%d")
-        errmsg = "Datum schon vergangen."
+        assert len(date) == 10, u"Ungültiges Datum."
+        date_current = datetime.strptime(date, "%Y-%m-%d")
+        date_now = datetime.now()
+        assert date_now < date_current, u"Datum liegt in der Vergangenheit."
 
-        if date[0:4] < date_now[0:4]:
-            errors["date"] = errmsg
-        elif date[0:4] == date_now[0:4]:
-            if date[4:6] < date_now[4:6]:
-                errors["date"] = errmsg
-            elif date[4:6] == date_now[4:6]:
-                if date[6:8] < date_now[6:8]:
-                    errors["date"] = errmsg
-    except (AssertionError, ValueError):
-        errors["date"] = u"Ungültiges Datum."
+    except AssertionError, e:
+        errors["date"] = e.message
 
     if (event["title"] is None or event["title"].strip() == ""):
-        errors["title"] = "Speisentitel fehlt."
+        errors["title"] = u"Speisentitel fehlt."
 
     if new == True:
         prevdates = []
@@ -247,7 +246,7 @@ def edit_event(event_id):
 @app.route("/admin/events/<event_id>/save", methods=["POST"])
 def save_edit_event(event_id):
     event = {
-        "date": str(normalize_date(request.form["date"])),
+        "date": request.form["date"],
         "title": request.form["title"],
         "details": request.form["details"],
         "slots": request.form["slots"],
@@ -315,11 +314,10 @@ def format_date(value, include_weekday=False): # XXX: does not belong here
     converts an ISO-8601-like integer into a date string:
     20120315 -> "2012-03-15 (Donnerstag)"
     """
-    date = str(value)
-    date = "%s-%s-%s" % (date[0:4], date[4:6], date[6:8])
-
+    date = value
+    
     if include_weekday:
-        weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
+        weekday = datetime.strptime(value, "%Y-%m-%d").weekday()
         weekday = ("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag",
                 "Samstag", "Sonntag")[weekday]
         date += " (%s)" % weekday
