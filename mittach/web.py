@@ -128,6 +128,7 @@ def create_event():
         "slots": request.form["slots"],
         "vegetarian": request.form.get("vegetarian")
     }
+    event["date"] = format_date(event["date"])
     errors = validate(event)
     if (len(errors) == 0):
         database.create_event(g.db, event)
@@ -193,7 +194,7 @@ def validate(event, new=True):
     if new == True:
         prevdates = []
         for e in database.list_events(g.db):
-            prevdates.append(int(e["date"]))
+            prevdates.append(e["date"])
 
         try:
             if int(date) in prevdates:
@@ -206,26 +207,32 @@ def validate(event, new=True):
 
 @app.route("/events/<event_id>/my_booking", methods=["POST"])
 def handle_booking(event_id):
-    date_now = datetime.now().strftime("%Y%m%d")
-    date = g.db.get("events:%s:date" % event_id)
-    err = False
+    date_now = datetime.now()
+    date = format_date(g.db.get("events:%s:date" % event_id))
+    last_Friday = get_Friday(date)
+    date = datetime.strptime(date, "%Y-%m-%d")
+    late = False
+    warn = False
 
-    if date[0:4] < date_now[0:4]:
-        err = True
-    elif date[0:4] == date_now[0:4]:
-        if date[4:6] < date_now[4:6]:
-            err = True
-        elif date[4:6] == date_now[4:6]:
-            if date[6:8] < date_now[6:8]:
-                err = True
-    if err == False:
+    if date <= date_now:
+        late = True
+    if date_now > last_Friday:
+        warn = True
+
+    if not late and not warn:
         if request.form.get("_method", "PUT").upper() == "DELETE":
             return cancel_event(event_id)
         else:
             return book_event(event_id)
-    else:
-        flash(u"Buchungen sind nicht mehr änderbar. Bitte Anja oder eienen Admin fragen, wenn trotzdem etwas geändert werden soll.", "error")
+    elif late:
+        flash(u"Buchungen sind nicht mehr änderbar. Bitte Anja oder einen Admin fragen, wenn trotzdem etwas geändert werden soll.", "error")
         return redirect(url_for("list_events", page=1))
+    elif warn:
+        flash(u"Achtung: Diese Buchungsänderung ist nicht vor Freitag vorgenommen worden. Bitte diese zeitig an Anja melden.", "error")
+        if request.form.get("_method", "PUT").upper() == "DELETE":
+            return cancel_event(event_id)
+        else:
+            return book_event(event_id)
 
 
 @app.route("/admin/<event_id>/delete", methods=["POST"])
@@ -252,6 +259,7 @@ def save_edit_event(event_id):
         "slots": request.form["slots"],
         "vegetarian": request.form.get("vegetarian")
     }
+    event["date"] = format_date(event["date"])
     errors = validate(event, new=False)
     if (len(errors) == 0):
         database.edit_event(g.db, event_id, event)
@@ -260,7 +268,6 @@ def save_edit_event(event_id):
     else:
         for field, msg in errors.items():
             flash(msg, "error")
-        event["date"] = format_date(event["date"])
         return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event, e_id =event_id)
 
 
@@ -307,17 +314,30 @@ def cancel_event_admin_save(event_id):
         flash("Anmeldung nicht erfolgreich.", "error")
     return redirect(url_for("admin", page=1))
 
-
+def get_Friday(value):
+    """
+    returns the date of the friday of the previous week as an datetime object
+    """
+    date = datetime.strptime(value,"%Y-%m-%d")
+    timedel = timedelta(days=datetime.strptime(value, "%Y-%m-%d").weekday() + 2)
+    date = date - timedel
+    return date
 
 def format_date(value, include_weekday=False): # XXX: does not belong here
     """
-    converts an ISO-8601-like integer into a date string:
+    if it's not already a date string, it converts an ISO-8601-like integer into a date string:
     20120315 -> "2012-03-15 (Donnerstag)"
     """
+
     date = value
-    
+    try:
+        assert len(date) == 10
+    except AssertionError:
+        date = str(value)
+        date = "%s-%s-%s" % (date[0:4], date[4:6], date[6:8])
+
     if include_weekday:
-        weekday = datetime.strptime(value, "%Y-%m-%d").weekday()
+        weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
         weekday = ("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag",
                 "Samstag", "Sonntag")[weekday]
         date += " (%s)" % weekday
