@@ -1,6 +1,6 @@
 <h2>Editiere Buchungen</h2>
 
-<form method="post" action="{{ url_for("cancel_event_admin_save", event_id=e_id) }}" class="well">
+<form method="post" action="{{ url_for('cancel_event_admin_save', event_id=e_id) }}" class="well">
   <label>Bisherige User<textarea name="current_users">
       {% for user in bookings %}{{ user }}
       {% endfor %}
