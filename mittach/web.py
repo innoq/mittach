@@ -14,16 +14,9 @@ from flask import Flask, g, request, url_for, make_response, redirect, abort, \
 from .config import read_config
 from . import database
 
-from flask import current_app
-
 NAME = "Mittach" # XXX: unnecessary?
 ADMINS = ["oberschulte", "hendrik11"]
 MAXEVENTS = 10 # Max events on one page
-
-
-
-def debug():
-    assert current_app.debug == False, "Don't panic! You're here by request of debug()"
 
 
 
