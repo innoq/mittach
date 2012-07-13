@@ -21,6 +21,12 @@
         <a href="{{ url_for("report_bookings", start=g.last_month["start"], end=g.last_month["end"]) }}">
             Report ({{ g.last_month["name"] }})
         </a>
+        {% block admin %}
+        <br>
+        <a href="{{ url_for("list_events", page=1) }}">
+            Admin verlassen
+        </a>
+        {% endblock %}
     </nav>
 {% block alerts %}
     <p class="alert alert-info">

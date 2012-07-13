@@ -17,13 +17,13 @@ from . import database
 from flask import current_app
 
 NAME = "Mittach" # XXX: unnecessary?
-ADMINS = ["oberschulte", "hendrik11"]
+ADMINS = [u"oberschulte", u"hendrik11"]
 MAXEVENTS = 10 # Max events on one page
 
 
 
 def debug():
-    assert current_app.debug == False, "Don't panic! You're here by request of debug()"
+    assert current_app.debug == False, u"Don't panic! You're here by request of debug()"
 
 
 
@@ -93,47 +93,24 @@ def root_events():
 @app.route("/admin/<page>")
 def admin(page):
     if g.current_user in ADMINS:
-        countpages = int(ceil(database.get_count_events(g.db) / MAXEVENTS))
-        pages = []
-        for i in range(1,countpages+1):
-            pages.append(i)
-        start = MAXEVENTS*(int(page)-1)
-        events = database.list_events(g.db)
-        sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
-        sortedEvents = sortedEvents[start:start+MAXEVENTS]
+        pages, sortedEvents = get_events_paginated(page,g.db)
         return render_template("admin.html", events=sortedEvents, new_event={}, cpages=pages, current_page=int(page))
     else:
         return render_template_string(u'{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} <p>Du besitzt nicht die benötigten Rechte für diese Seite. <a href="{{ url_for("list_events", page=1) }}">Zurück zur Übersicht</a></p> {% endblock %}')
 
 @app.route("/events/<page>")
 def list_events(page):
-    countpages = int(ceil(database.get_count_events(g.db) / MAXEVENTS))
-    pages = []
-    for i in range(1,countpages+1):
-        pages.append(i)
-    start = MAXEVENTS*(int(page)-1)
-    events = database.list_events(g.db)
-    sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
-    sortedEvents = sortedEvents[start:start+MAXEVENTS]
+    pages, sortedEvents = get_events_paginated(page,g.db)
     return render_template("index.html", events=sortedEvents, new_event={}, cpages=pages, current_page=int(page))
-
-
 
 @app.route("/events", methods=["POST"])
 def create_event():
-    event = {
-        "date": request.form["date"],
-        "title": request.form["title"],
-        "details": request.form["details"],
-        "slots": request.form["slots"],
-        "vegetarian": request.form.get("vegetarian")
-    }
-    event["date"] = format_date(event["date"])
+    event = get_Event_from_Request(request)
     errors = validate(event)
     if (len(errors) == 0):
         database.create_event(g.db, event)
-        flash("Termin erstellt.", "success")
-        return redirect(url_for("list_events", page=1))
+        flash(u"Termin erstellt.", "success")
+        return redirect(url_for("admin", page=1))
     else:
         for field, msg in errors.items():
             flash(msg, "error")
@@ -198,7 +175,7 @@ def validate(event, new=True):
 
         try:
             if int(date) in prevdates:
-                errors["date"] = "Speise an diesem Datum schon vorhanden."
+                errors["date"] = u"Speise an diesem Datum schon vorhanden."
         except:
             pass
 
@@ -252,14 +229,7 @@ def edit_event(event_id):
 
 @app.route("/admin/events/<event_id>/save", methods=["POST"])
 def save_edit_event(event_id):
-    event = {
-        "date": request.form["date"],
-        "title": request.form["title"],
-        "details": request.form["details"],
-        "slots": request.form["slots"],
-        "vegetarian": request.form.get("vegetarian")
-    }
-    event["date"] = format_date(event["date"])
+    event = get_Event_from_Request(request)
     errors = validate(event, new=False)
     if (len(errors) == 0):
         database.edit_event(g.db, event_id, event)
@@ -275,18 +245,18 @@ def save_edit_event(event_id):
 def book_event(event_id):
     veg = request.form.get("vegetarian")
     if database.book_event(g.db, event_id, g.current_user, vegetarian=veg):
-        flash("Anmeldung erfolgreich.", "success")
+        flash(u"Anmeldung erfolgreich.", "success")
     else:
-        flash("Anmeldung nicht erfolgreich.", "error")
+        flash(u"Anmeldung nicht erfolgreich.", "error")
     return redirect(url_for("list_events", page=1))
 
 
 @app.route("/events/<event_id>/my_booking", methods=["DELETE"])
 def cancel_event(event_id):
     if database.cancel_event(g.db, event_id, g.current_user):
-        flash("Abmeldung erfolgreich.", "success")
+        flash(u"Abmeldung erfolgreich.", "success")
     else:
-        flash("Abmeldung nicht erfolgreich.", "error")
+        flash(u"Abmeldung nicht erfolgreich.", "error")
     return redirect(url_for("list_events", page=1))
 
 
@@ -302,16 +272,16 @@ def cancel_event_admin_save(event_id):
     bookings = database.get_bookings(g.db, event_id)
     if request.form.get("_method"):
         if user not in bookings:
-            flash("User nicht in Buchungen vorhanden", "error")
+            flash(u"User nicht in Buchungen vorhanden", "error")
             return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_bookings.html" %} {% endblock %}', bookings=bookings, e_id =event_id)
         elif database.cancel_event(g.db, event_id, user):
-            flash("Abmeldung erfolgreich.", "success")
+            flash(u"Abmeldung erfolgreich.", "success")
         else:
             flash("Abmeldung nicht erfolgreich.", "error")
     elif database.book_event(g.db, event_id, user, vegetarian=False):
-        flash("Anmeldung erfolgreich.", "success")
+        flash(u"Anmeldung erfolgreich.", "success")
     else:
-        flash("Anmeldung nicht erfolgreich.", "error")
+        flash(u"Anmeldung nicht erfolgreich.", "error")
     return redirect(url_for("admin", page=1))
 
 def get_Friday(value):
@@ -322,6 +292,27 @@ def get_Friday(value):
     timedel = timedelta(days=datetime.strptime(value, "%Y-%m-%d").weekday() + 2)
     date = date - timedel
     return date
+
+def get_Event_from_Request(request):
+    event = {
+        "date": format_date(request.form["date"]),
+        "title": request.form["title"],
+        "details": request.form["details"],
+        "slots": request.form["slots"],
+        "vegetarian": request.form.get("vegetarian")
+    }
+    return event
+
+def get_events_paginated(page, db):
+    countpages = int(ceil(database.get_count_events(db) / MAXEVENTS))
+    pages = []
+    for i in range(1,countpages+1):
+        pages.append(i)
+    start = MAXEVENTS*(int(page)-1)
+    events = database.list_events(db)
+    sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
+    sortedEvents = sortedEvents[start:start+MAXEVENTS]
+    return pages,sortedEvents
 
 def format_date(value, include_weekday=False): # XXX: does not belong here
     """
@@ -338,8 +329,8 @@ def format_date(value, include_weekday=False): # XXX: does not belong here
 
     if include_weekday:
         weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
-        weekday = ("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag",
-                "Samstag", "Sonntag")[weekday]
+        weekday = (u"Montag", u"Dienstag", u"Mittwoch", u"Donnerstag", u"Freitag",
+                u"Samstag", u"Sonntag")[weekday]
         date += " (%s)" % weekday
 
     return date
@@ -357,12 +348,12 @@ def month_name(date, include_year=False):
     except (AssertionError, ValueError):
         raise ValueError("invalid date format")
 
-    month = int(date[5:7]) - 1 # TODO: use `datetime` for this
-    res = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
-            "August", "September", "Oktober", "November", "Dezember"][month]
+    month = datetime.strptime(date, "%Y-%m-%d").month - 1
+    res = [u"Januar", u"Februar", u"März", u"April", u"Mai", u"Juni", u"Juli",
+            u"August", u"September", u"Oktober", u"November", u"Dezember"][month]
 
     if include_year:
-        res += " %s" % date[0:4] # TODO: use `datetime` for this
+        res += str(datetime.strptime(date, "%Y-%m-%d").year)
 
     return res
 

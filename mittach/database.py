@@ -80,22 +80,12 @@ def book_event(db, event_id, username, vegetarian):
         return False
 
 def delete_event(db, event_id):
-    namespace = "events:%s" % event_id
-    try:
-        pipe = db.pipeline()
-        pipe.lrem("events", 1, event_id)
-        pipe.lrem("%s:" % namespace, 1, "date")
-        pipe.lrem("%s:" % namespace, 1, "title")
-        pipe.lrem("%s:" % namespace, 1, "details")
-        pipe.lrem("%s:" % namespace, 1, "slots")
-        results = pipe.execute()
-        erg = True
-    except:
-        erg = False
+    pipe = db.pipeline()
+    pipe.lrem("events", 1, event_id)
+    results = pipe.execute()
+    
+    return results[0] > 0
 
-
-
-    return erg
 
 def get_event(db, event_id):
     namespace = "events:%s" % event_id
@@ -123,7 +113,9 @@ def edit_event(db, event_id, data):
     pipe.set("%s:slots" % namespace, data["slots"])
     if data["vegetarian"]:
         pipe.set("%s:vegetarian" % namespace, True)
-    pipe.execute()
+    results = pipe.execute()
+
+    return results[0] > 0
 
 
 def cancel_event(db, event_id, username):

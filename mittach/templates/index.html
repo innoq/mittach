@@ -1,8 +1,14 @@
 {% extends "layout.html" %}
+{% block admin %}
+    <br>
+    <a href="{{ url_for("admin", page=1) }}">
+        Admin
+    </a>
+{% endblock %}
 
 {% block body %}
 <div class="row">
-  <div class="span8">
+  <div class="span12">
     <h2>Aktuelle Termine</h2>
     <div class="well">
       <table class="table">
@@ -60,12 +66,6 @@
              {% endif %}
         {% endfor %}
     </div>
-  </div>
-  <div class="span4">
-    {% include "create_event.html" %}
-      <form method="get" action="{{ url_for("admin", page=1) }}">
-      <input type="submit" class="btn btn-success" value="Admin">
-      </form>
   </div>
 </div>
 {% endblock %}
