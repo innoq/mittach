@@ -103,6 +103,13 @@ def list_events(page):
     pages, sortedEvents = get_events_paginated(page,g.db)
     return render_template("index.html", events=sortedEvents, new_event={}, cpages=pages, current_page=int(page))
 
+@app.route("/bookings/<event_id>", methods=["GET"])
+def list_bookings(event_id):
+    a_bookings = database.get_bookings(g.db, event_id)
+    if len(a_bookings) == 0:
+        a_bookings = None
+    return render_template_string(u'{% extends "layout.html" %} {% block body %} <p>Angemeldete User: <br> {% if bookings != None %} {% for user in bookings %}{{ user }}{% endfor %} {% else %} Niemand hat sicher bisher angemeldet.{% endif %} <br><br> <a href="{{ url_for("list_events", page=1) }}">Zurück zur Übersicht</a></p>{% endblock %}', bookings=a_bookings)
+
 @app.route("/events", methods=["POST"])
 def create_event():
     event = get_Event_from_Request(request)

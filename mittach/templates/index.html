@@ -25,14 +25,14 @@
           {% for event in events %}
           <tr id="event_{{ event.id }}">
             <td data-popover-title="Teilnehmer" data-popover-content="{{ event.bookings|join(', ')|default('Es haben sich noch keine Teilnehmer angemeldet', true) }}">
-              <a href="#">{{ event.title }}</a>
+              <a href="{{ url_for("list_bookings", event_id=event.id) }}">{{ event.title }}</a>
             </td>
             <td>{{ event.date|format_date(True) }}</td>
             <td>{{ event.bookings|length }}</td>
             <td>{{ event.vegetarians|length if event.vegetarian else "N/A" }}</td>
             <td>
               {% if g.current_user in event.bookings %}
-              <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
+              <form method="post" name="Buchung" action="{{ url_for("handle_booking", event_id=event.id) }}">
                 <input type="hidden" name="_method" value="delete">
                 <input type="submit" class="btn btn-danger" value="Stornieren">
               </form>
