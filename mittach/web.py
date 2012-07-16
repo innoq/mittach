@@ -121,7 +121,8 @@ def create_event():
     else:
         for field, msg in errors.items():
             flash(msg, "error")
-        
+        if event["slots"] == -1:
+            event["slots"] = "unendlich"
         return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
 
 
@@ -232,6 +233,8 @@ def delete_event(event_id):
 def edit_event(event_id):
     event = database.get_event(g.db, event_id)
     event["date"] = format_date(event["date"])
+    if event["slots"] == "-1":
+        event["slots"] = "unendlich"
     return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event, e_id=event_id)
 
 @app.route("/admin/events/<event_id>/save", methods=["POST"])
@@ -245,6 +248,8 @@ def save_edit_event(event_id):
     else:
         for field, msg in errors.items():
             flash(msg, "error")
+        if event["slots"] == -1:
+            event["slots"] = "unendlich"
         return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event, e_id =event_id)
 
 
@@ -330,9 +335,14 @@ def format_date(value, include_weekday=False): # XXX: does not belong here
     date = value
     try:
         assert len(date) == 10
+        assert date[4] == date[7] == "-"
     except AssertionError:
-        date = str(value)
-        date = "%s-%s-%s" % (date[0:4], date[4:6], date[6:8])
+        try:
+            assert len(date) == 8
+            date = str(value)
+            date = "%s-%s-%s" % (date[0:4], date[4:6], date[6:8])
+        except (AssertionError, ValueError):
+           return ""
 
     if include_weekday:
         weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
