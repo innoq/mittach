@@ -103,12 +103,19 @@ def list_events(page):
     pages, sortedEvents = get_events_paginated(page,g.db)
     return render_template("index.html", events=sortedEvents, new_event={}, cpages=pages, current_page=int(page))
 
-@app.route("/bookings/<event_id>", methods=["GET"])
+@app.route("/bookings/<event_id>")
 def list_bookings(event_id):
     a_bookings = database.get_bookings(g.db, event_id)
     if len(a_bookings) == 0:
         a_bookings = None
     return render_template_string(u'{% extends "layout.html" %} {% block body %} <p>Angemeldete User: <br> {% if bookings != None %} {% for user in bookings %}{{ user }}{% endfor %} {% else %} Niemand hat sicher bisher angemeldet.{% endif %} <br><br> <a href="{{ url_for("list_events", page=1) }}">Zurück zur Übersicht</a></p>{% endblock %}', bookings=a_bookings)
+
+@app.route("/admin/bookings/<event_id>")
+def admin_list_bookings(event_id):
+    a_bookings = database.get_bookings(g.db, event_id)
+    if len(a_bookings) == 0:
+        a_bookings = None
+    return render_template_string(u'{% extends "layout.html" %} {% block body %} <p>Angemeldete User: <br> {% if bookings != None %} {% for user in bookings %}{{ user }}{% endfor %} {% else %} Niemand hat sicher bisher angemeldet.{% endif %} <br><br> <a href="{{ url_for("admin", page=1) }}">Zurück zur Übersicht</a></p>{% endblock %}', bookings=a_bookings)
 
 @app.route("/events", methods=["POST"])
 def create_event():
@@ -182,7 +189,7 @@ def validate(event, new=True):
             prevdates.append(e["date"])
 
         try:
-            if int(date) in prevdates:
+            if date in prevdates:
                 errors["date"] = u"Speise an diesem Datum schon vorhanden."
         except:
             pass
@@ -272,13 +279,13 @@ def cancel_event(event_id):
     return redirect(url_for("list_events", page=1))
 
 
-@app.route("/admin/events/<event_id>/cancel_booking", methods=["POST"])
+@app.route("/admin/events/<event_id>/edit_booking", methods=["POST"])
 def cancel_event_admin(event_id):
     a_bookings = database.get_bookings(g.db, event_id)
     return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_bookings.html" %} {% endblock %}', bookings=a_bookings, e_id=event_id)
 
 
-@app.route("/admin/events/<event_id>/cancel_booking/edit", methods=["POST"])
+@app.route("/admin/events/<event_id>/edit_booking/save", methods=["POST"])
 def cancel_event_admin_save(event_id):
     user = request.form["user"]
     bookings = database.get_bookings(g.db, event_id)

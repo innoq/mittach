@@ -44,8 +44,9 @@
 {% endblock %}
 
     {% for category, message in get_flashed_messages(true) %}
-    <div class="alert alert-{{ category }}">{{ message }}</div>
+    <div class="alert alert-{{ category }}" name="alert">{{ message }}</div>
     {% endfor %}
+     <div name="alert"></div>
     {% block body %}{% endblock %}
   </div>
 

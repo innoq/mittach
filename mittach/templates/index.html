@@ -37,7 +37,7 @@
                 <input type="submit" class="btn btn-danger" value="Stornieren">
               </form>
               {% elif event.slots == -1 or event.slots > event.bookings|length %}
-              <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
+              <form method="post" name="Buchung" action="{{ url_for("handle_booking", event_id=event.id) }}">
                 <input type="hidden" name="_method" value="put">
                 {% if event.vegetarian %}
                 <label>
