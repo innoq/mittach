@@ -1,8 +1,8 @@
 from redis import StrictRedis
-
+from flask import current_app
 
 def debug():
-    raise StandardError("Don't panic! You're here by request of debug()")
+    assert current_app.debug == False, "Don't panic! You're here by request of debug()"
 
 def connect(config):
     cfg = config["DATABASE"]
