@@ -17,7 +17,7 @@ from . import database
 from flask import current_app
 
 NAME = "Mittach" # XXX: unnecessary?
-ADMINS = [u"oberschulte", u"hendrik11"]
+ADMINS = [u"co", u"hendrikh", u"anjaa", u"hendrik11"]
 MAXEVENTS = 10 # Max events on one page
 
 
@@ -173,9 +173,10 @@ def validate(event, new=True):
     date = event["date"]
     try:
         assert len(date) == 10, u"Ungültiges Datum."
-        date_current = datetime.strptime(date, "%Y-%m-%d")
-        date_now = datetime.now()
-        assert date_now < date_current, u"Datum liegt in der Vergangenheit."
+        if new == True:
+            date_current = datetime.strptime(date, "%Y-%m-%d")
+            date_now = datetime.now()
+            assert date_now < date_current, u"Datum liegt in der Vergangenheit."
 
     except AssertionError, e:
         errors["date"] = e.message
