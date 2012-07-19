@@ -17,7 +17,7 @@ from . import database
 from flask import current_app
 
 NAME = "Mittach" # XXX: unnecessary?
-ADMINS = [u"oberschulte", u"hendrik11"]
+ADMINS = [u"co", u"hendrikh", u"anjaa", u"hendrik11"]
 MAXEVENTS = 10 # Max events on one page
 
 
@@ -108,14 +108,14 @@ def list_bookings(event_id):
     a_bookings = database.get_bookings(g.db, event_id)
     if len(a_bookings) == 0:
         a_bookings = None
-    return render_template_string(u'{% extends "layout.html" %} {% block body %} <p>Angemeldete User: <br> {% if bookings != None %} {% for user in bookings %}{{ user }}{% endfor %} {% else %} Niemand hat sicher bisher angemeldet.{% endif %} <br><br> <a href="{{ url_for("list_events", page=1) }}">Zurück zur Übersicht</a></p>{% endblock %}', bookings=a_bookings)
+    return render_template_string(u'{% extends "layout.html" %} {% block admin %}<br><a href="{{ url_for("admin", page=1) }}">Admin</a>{% endblock %}{% block body %} <p>Angemeldete User: <br> {% if bookings != None %} {{ bookings|join(", ") }}{% else %} Niemand hat sicher bisher angemeldet.{% endif %} <br><br> <a href="{{ url_for("list_events", page=1) }}">Zurück zur Übersicht</a></p>{% endblock %}', bookings=a_bookings)
 
 @app.route("/admin/bookings/<event_id>")
 def admin_list_bookings(event_id):
     a_bookings = database.get_bookings(g.db, event_id)
     if len(a_bookings) == 0:
         a_bookings = None
-    return render_template_string(u'{% extends "layout.html" %} {% block body %} <p>Angemeldete User: <br> {% if bookings != None %} {% for user in bookings %}{{ user }}{% endfor %} {% else %} Niemand hat sicher bisher angemeldet.{% endif %} <br><br> <a href="{{ url_for("admin", page=1) }}">Zurück zur Übersicht</a></p>{% endblock %}', bookings=a_bookings)
+    return render_template_string(u'{% extends "layout.html" %} {% block body %} <p>Angemeldete User: <br> {% if bookings != None %} {{ bookings|join(", ") }}{% else %} Niemand hat sicher bisher angemeldet.{% endif %} <br><br> <a href="{{ url_for("admin", page=1) }}">Zurück zur Übersicht</a></p>{% endblock %}', bookings=a_bookings)
 
 @app.route("/events", methods=["POST"])
 def create_event():
@@ -173,9 +173,10 @@ def validate(event, new=True):
     date = event["date"]
     try:
         assert len(date) == 10, u"Ungültiges Datum."
-        date_current = datetime.strptime(date, "%Y-%m-%d")
-        date_now = datetime.now()
-        assert date_now < date_current, u"Datum liegt in der Vergangenheit."
+        if new == True:
+            date_current = datetime.strptime(date, "%Y-%m-%d")
+            date_now = datetime.now()
+            assert date_now < date_current, u"Datum liegt in der Vergangenheit."
 
     except AssertionError, e:
         errors["date"] = e.message

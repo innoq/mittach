@@ -93,8 +93,8 @@ def get_event(db, event_id):
     data = {
         "id": event_id,
         "date": db.get("%s:date" % namespace),
-        "title": db.get("%s:title" % namespace),
-        "details": db.get("%s:details" % namespace),
+        "title": db.get("%s:title" % namespace).decode("utf-8"),
+        "details": db.get("%s:details" % namespace).decode("utf-8"),
         "slots": db.get("%s:slots" % namespace),
         "vegetarian": db.get("%s:vegetarian" % namespace)
     }
@@ -114,6 +114,7 @@ def edit_event(db, event_id, data):
     if data["vegetarian"]:
         pipe.set("%s:vegetarian" % namespace, True)
     results = pipe.execute()
+
 
     return results[0] > 0
 
