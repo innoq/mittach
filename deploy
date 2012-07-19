@@ -5,7 +5,7 @@ set -x
 
 host="internal2.innoq.com"
 
-ssh $host 'rm ~/tmp/mittach-*.tar.gz'
+ssh $host 'if [ -f ~/tmp/mittach-*.tar.gz ]; then rm ~/tmp/mittach-*.tar.gz; fi'
 scp dist/mittach-*.tar.gz $host:~/tmp/
 ssh $host 'cd /var/www/internal.innoq.com/mittach/ && ' \
 		'. venv/bin/activate && ' \
