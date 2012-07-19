@@ -1,8 +1,14 @@
 {% extends "layout.html" %}
+{% block admin %}
+    <br>
+    <a href="{{ url_for("admin", page=1) }}">
+        Admin
+    </a>
+{% endblock %}
 
 {% block body %}
 <div class="row">
-  <div class="span8">
+  <div class="span12">
     <h2>Aktuelle Termine</h2>
     <div class="well">
       <table class="table">
@@ -19,19 +25,19 @@
           {% for event in events %}
           <tr id="event_{{ event.id }}">
             <td data-popover-title="Teilnehmer" data-popover-content="{{ event.bookings|join(', ')|default('Es haben sich noch keine Teilnehmer angemeldet', true) }}">
-              <a href="#">{{ event.title }}</a>
+              <a href="{{ url_for("list_bookings", event_id=event.id) }}">{{ event.title }}</a>
             </td>
             <td>{{ event.date|format_date(True) }}</td>
             <td>{{ event.bookings|length }}</td>
             <td>{{ event.vegetarians|length if event.vegetarian else "N/A" }}</td>
             <td>
               {% if g.current_user in event.bookings %}
-              <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
+              <form method="post" name="Buchung" action="{{ url_for("handle_booking", event_id=event.id) }}">
                 <input type="hidden" name="_method" value="delete">
                 <input type="submit" class="btn btn-danger" value="Stornieren">
               </form>
               {% elif event.slots == -1 or event.slots > event.bookings|length %}
-              <form method="post" action="{{ url_for("handle_booking", event_id=event.id) }}">
+              <form method="post" name="Buchung" action="{{ url_for("handle_booking", event_id=event.id) }}">
                 <input type="hidden" name="_method" value="put">
                 {% if event.vegetarian %}
                 <label>
@@ -47,15 +53,19 @@
             </td>
           </tr>
           <tr class="details">
-            <td colspan="4">{{ event.details }}</td>
+            <td colspan="8">{{ event.details }}</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
+        {% for pagenr in cpages %}
+            {% if pagenr != current_page %}
+                <a href="{{ url_for("list_events", page=pagenr) }}">{{ pagenr }}</a>
+            {% else %}
+              {{ pagenr }}
+             {% endif %}
+        {% endfor %}
     </div>
-  </div>
-  <div class="span4">
-    {% include "create_event.html" %}
   </div>
 </div>
 {% endblock %}

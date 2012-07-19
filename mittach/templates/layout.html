@@ -13,7 +13,7 @@
 <body>
   <div class="container">
     <header>
-      <img src="{{ url_for("static", filename="images/logo.png") }}">
+      <a href="{{ url_for("list_events", page=1) }}"> <img src="{{ url_for("static", filename="images/logo.png") }}"></a>
       <p>Mahlzeit, {{ g.current_user }}</p>
       <p>Mitarbeiter 3 €, Externe 5 €</p>
     </header>
@@ -21,8 +21,14 @@
         <a href="{{ url_for("report_bookings", start=g.last_month["start"], end=g.last_month["end"]) }}">
             Report ({{ g.last_month["name"] }})
         </a>
+        {% block admin %}
+        <br>
+        <a href="{{ url_for("list_events", page=1) }}">
+            Admin verlassen
+        </a>
+        {% endblock %}
     </nav>
-
+{% block alerts %}
     <p class="alert alert-info">
         Bei Fragen oder Anregungen wendet euch bitte an
         <a href="mailto:anja.angermann@innoq.com">Anja</a>
@@ -35,10 +41,12 @@
         Vortag, storniert werden. Die dadurch frei gewordenen Essen können dann
         an Interessenten "weitergegeben" werden.
     </p>
+{% endblock %}
 
     {% for category, message in get_flashed_messages(true) %}
-    <div class="alert alert-{{ category }}">{{ message }}</div>
+    <div class="alert alert-{{ category }}" name="alert">{{ message }}</div>
     {% endfor %}
+     <div name="alert"></div>
     {% block body %}{% endblock %}
   </div>
 

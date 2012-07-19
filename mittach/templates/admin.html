@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+{% block alerts %}{% endblock %}
+{% block body %}
+<div class="row">
+  <div class="span8">
+    <h2>Admin</h2>
+    <div class="well">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Speise</th>
+            <th>Datum</th>
+            <th>Anmeldungen
+            <th>davon vegetarisch</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in events %}
+          <tr id="event_{{ event.id }}">
+            <td data-popover-title="Teilnehmer" data-popover-content="{{ event.bookings|join(', ')|default('Es haben sich noch keine Teilnehmer angemeldet', true) }}">
+              <a href="{{ url_for("admin_list_bookings", event_id=event.id) }}">{{ event.title }}</a>
+            </td>
+            <td>{{ event.date|format_date(True) }}</td>
+            <td>{{ event.bookings|length }}</td>
+            <td>{{ event.vegetarians|length if event.vegetarian else "N/A" }}</td>
+            <td>
+              <form method="post" name="Buchung" action="{{ url_for("delete_event", event_id=event.id) }}">
+                <input type="submit" class="btn btn-danger" value="Löschen">
+              </form>
+            </td>
+            <td>
+              <form method="post" action="{{ url_for("edit_event", event_id=event.id) }}">
+                <input type="submit" class="btn btn-warning" value="Bearbeiten">
+              </form>
+            </td>
+            <td>
+              <form method="post" action="{{ url_for("cancel_event_admin", event_id=event.id) }}">
+                <input type="submit" class="btn btn-warning" value="Buchungen ändern">
+              </form>
+            </td>
+          </tr>
+          <tr class="details">
+            <td colspan="8">{{ event.details }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+        {% for pagenr in cpages %}
+            {% if pagenr != current_page %}
+                <a href="{{ url_for("admin", page=pagenr) }}">{{ pagenr }}</a>
+            {% else %}
+              {{ pagenr }}
+             {% endif %}
+        {% endfor %}
+    </div>
+  </div>
+  <div class="span4">
+    {% include "create_event.html" %}
+  </div>
+</div>
+{% endblock %}

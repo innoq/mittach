@@ -6,6 +6,7 @@ import os
 
 from datetime import date, datetime, timedelta
 from collections import defaultdict
+from math import ceil
 
 from flask import Flask, g, request, url_for, make_response, redirect, abort, \
     render_template, flash, render_template_string
@@ -13,8 +14,17 @@ from flask import Flask, g, request, url_for, make_response, redirect, abort, \
 from .config import read_config
 from . import database
 
+from flask import current_app
 
 NAME = "Mittach" # XXX: unnecessary?
+ADMINS = [u"co", u"hendrikh", u"anjaa", u"hendrik11"]
+MAXEVENTS = 10 # Max events on one page
+
+
+
+def debug():
+    assert current_app.debug == False, u"Don't panic! You're here by request of debug()"
+
 
 
 class RemoteUserMiddleware(object):
@@ -74,32 +84,52 @@ def teardown_request(exc):
 
 @app.route("/")
 def root():
-    return redirect(url_for("list_events"))
-
+    return redirect(url_for("list_events", page=1))
 
 @app.route("/events")
-def list_events():
-    events = database.list_events(g.db)
-    return render_template("index.html", events=events, new_event={})
+def root_events():
+    return redirect(url_for("list_events", page=1))
 
+@app.route("/admin/<page>")
+def admin(page):
+    if g.current_user in ADMINS:
+        pages, sortedEvents = get_events_paginated(page,g.db)
+        return render_template("admin.html", events=sortedEvents, new_event={}, cpages=pages, current_page=int(page))
+    else:
+        return render_template_string(u'{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} <p>Du besitzt nicht die benötigten Rechte für diese Seite. <a href="{{ url_for("list_events", page=1) }}">Zurück zur Übersicht</a></p> {% endblock %}')
+
+@app.route("/events/<page>")
+def list_events(page):
+    pages, sortedEvents = get_events_paginated(page,g.db)
+    return render_template("index.html", events=sortedEvents, new_event={}, cpages=pages, current_page=int(page))
+
+@app.route("/bookings/<event_id>")
+def list_bookings(event_id):
+    a_bookings = database.get_bookings(g.db, event_id)
+    if len(a_bookings) == 0:
+        a_bookings = None
+    return render_template_string(u'{% extends "layout.html" %} {% block admin %}<br><a href="{{ url_for("admin", page=1) }}">Admin</a>{% endblock %}{% block body %} <p>Angemeldete User: <br> {% if bookings != None %} {{ bookings|join(", ") }}{% else %} Niemand hat sicher bisher angemeldet.{% endif %} <br><br> <a href="{{ url_for("list_events", page=1) }}">Zurück zur Übersicht</a></p>{% endblock %}', bookings=a_bookings)
+
+@app.route("/admin/bookings/<event_id>")
+def admin_list_bookings(event_id):
+    a_bookings = database.get_bookings(g.db, event_id)
+    if len(a_bookings) == 0:
+        a_bookings = None
+    return render_template_string(u'{% extends "layout.html" %} {% block body %} <p>Angemeldete User: <br> {% if bookings != None %} {{ bookings|join(", ") }}{% else %} Niemand hat sicher bisher angemeldet.{% endif %} <br><br> <a href="{{ url_for("admin", page=1) }}">Zurück zur Übersicht</a></p>{% endblock %}', bookings=a_bookings)
 
 @app.route("/events", methods=["POST"])
 def create_event():
-    event = {
-        "date": request.form["date"].replace("-", ""), # TODO: use `normalize_date`
-        "title": request.form["title"],
-        "details": request.form["details"],
-        "slots": request.form["slots"],
-        "vegetarian": request.form.get("vegetarian")
-    }
+    event = get_Event_from_Request(request)
     errors = validate(event)
     if (len(errors) == 0):
         database.create_event(g.db, event)
-        flash("Termin erstellt.", "success")
-        return redirect(url_for("list_events"))
+        flash(u"Termin erstellt.", "success")
+        return redirect(url_for("admin", page=1))
     else:
         for field, msg in errors.items():
             flash(msg, "error")
+        if event["slots"] == -1:
+            event["slots"] = "unendlich"
         return render_template_string('{% extends "layout.html" %} {% block body %} {% include "create_event.html" %} {% endblock %}', new_event=event)
 
 
@@ -132,7 +162,7 @@ def report_bookings(start, end):
     return response
 
 
-def validate(event):
+def validate(event, new=True):
     errors = {}
 
     try:
@@ -142,56 +172,190 @@ def validate(event):
 
     date = event["date"]
     try:
-        assert len(date) == 8
-        int(date)
-    except (AssertionError, ValueError):
-        errors["date"] = u"Ungültiges Datum."
+        assert len(date) == 10, u"Ungültiges Datum."
+        if new == True:
+            date_current = datetime.strptime(date, "%Y-%m-%d")
+            date_now = datetime.now()
+            assert date_now < date_current, u"Datum liegt in der Vergangenheit."
+
+    except AssertionError, e:
+        errors["date"] = e.message
 
     if (event["title"] is None or event["title"].strip() == ""):
-        errors["title"] = "Speisentitel fehlt."
+        errors["title"] = u"Speisentitel fehlt."
+
+    if new == True:
+        prevdates = []
+        for e in database.list_events(g.db):
+            prevdates.append(e["date"])
+
+        try:
+            if date in prevdates:
+                errors["date"] = u"Speise an diesem Datum schon vorhanden."
+        except:
+            pass
 
     return errors
 
 
 @app.route("/events/<event_id>/my_booking", methods=["POST"])
 def handle_booking(event_id):
-    if request.form.get("_method", "PUT").upper() == "DELETE":
-        return cancel_event(event_id)
+    date_now = datetime.now()
+    date = format_date(g.db.get("events:%s:date" % event_id))
+    last_Friday = get_Friday(date)
+    date = datetime.strptime(date, "%Y-%m-%d")
+    late = False
+    warn = False
+
+    if date <= date_now:
+        late = True
+    if date_now > last_Friday:
+        warn = True
+
+    if not late and not warn:
+        if request.form.get("_method", "PUT").upper() == "DELETE":
+            return cancel_event(event_id)
+        else:
+            return book_event(event_id)
+    elif late:
+        flash(u"Buchungen sind nicht mehr änderbar. Bitte Anja oder einen Admin fragen, wenn trotzdem etwas geändert werden soll.", "error")
+        return redirect(url_for("list_events", page=1))
+    elif warn:
+        flash(u"Achtung: Diese Buchungsänderung ist nicht vor Freitag vorgenommen worden. Bitte diese zeitig an Anja melden.", "error")
+        if request.form.get("_method", "PUT").upper() == "DELETE":
+            return cancel_event(event_id)
+        else:
+            return book_event(event_id)
+
+
+@app.route("/admin/<event_id>/delete", methods=["POST"])
+def delete_event(event_id):
+    if database.delete_event(g.db, event_id):
+        flash(u"Löschen erfolgreich.", "success")
     else:
-        return book_event(event_id)
+        flash(u"Löschen nicht erfolgreich.", "error")
+    return redirect(url_for("admin", page=1))
+
+
+@app.route("/admin/events/<event_id>/edit", methods=["POST"])
+def edit_event(event_id):
+    event = database.get_event(g.db, event_id)
+    event["date"] = format_date(event["date"])
+    if event["slots"] == "-1":
+        event["slots"] = "unendlich"
+    return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event, e_id=event_id)
+
+@app.route("/admin/events/<event_id>/save", methods=["POST"])
+def save_edit_event(event_id):
+    event = get_Event_from_Request(request)
+    errors = validate(event, new=False)
+    if (len(errors) == 0):
+        database.edit_event(g.db, event_id, event)
+        flash(u"Termin erfolgreich geändert.", "success")
+        return redirect(url_for("admin", page=1))
+    else:
+        for field, msg in errors.items():
+            flash(msg, "error")
+        if event["slots"] == -1:
+            event["slots"] = "unendlich"
+        return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_event.html" %} {% endblock %}', new_event=event, e_id =event_id)
 
 
 @app.route("/events/<event_id>/my_booking", methods=["PUT"])
 def book_event(event_id):
     veg = request.form.get("vegetarian")
     if database.book_event(g.db, event_id, g.current_user, vegetarian=veg):
-        flash("Anmeldung erfolgreich.", "success")
+        flash(u"Anmeldung erfolgreich.", "success")
     else:
-        flash("Anmeldung nicht erfolgreich.", "error")
-    return redirect(url_for("list_events"))
+        flash(u"Anmeldung nicht erfolgreich.", "error")
+    return redirect(url_for("list_events", page=1))
 
 
 @app.route("/events/<event_id>/my_booking", methods=["DELETE"])
 def cancel_event(event_id):
     if database.cancel_event(g.db, event_id, g.current_user):
-        flash("Abmeldung erfolgreich.", "success")
+        flash(u"Abmeldung erfolgreich.", "success")
     else:
-        flash("Abmeldung nicht erfolgreich.", "error")
-    return redirect(url_for("list_events"))
+        flash(u"Abmeldung nicht erfolgreich.", "error")
+    return redirect(url_for("list_events", page=1))
 
+
+@app.route("/admin/events/<event_id>/edit_booking", methods=["POST"])
+def cancel_event_admin(event_id):
+    a_bookings = database.get_bookings(g.db, event_id)
+    return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_bookings.html" %} {% endblock %}', bookings=a_bookings, e_id=event_id)
+
+
+@app.route("/admin/events/<event_id>/edit_booking/save", methods=["POST"])
+def cancel_event_admin_save(event_id):
+    user = request.form["user"]
+    bookings = database.get_bookings(g.db, event_id)
+    if request.form.get("_method"):
+        if user not in bookings:
+            flash(u"User nicht in Buchungen vorhanden", "error")
+            return render_template_string('{% extends "layout.html" %} {% block alerts %}{% endblock %} {% block body %} {% include "edit_bookings.html" %} {% endblock %}', bookings=bookings, e_id =event_id)
+        elif database.cancel_event(g.db, event_id, user):
+            flash(u"Abmeldung erfolgreich.", "success")
+        else:
+            flash("Abmeldung nicht erfolgreich.", "error")
+    elif database.book_event(g.db, event_id, user, vegetarian=False):
+        flash(u"Anmeldung erfolgreich.", "success")
+    else:
+        flash(u"Anmeldung nicht erfolgreich.", "error")
+    return redirect(url_for("admin", page=1))
+
+def get_Friday(value):
+    """
+    returns the date of the friday of the previous week as an datetime object
+    """
+    date = datetime.strptime(value,"%Y-%m-%d")
+    timedel = timedelta(days=datetime.strptime(value, "%Y-%m-%d").weekday() + 2)
+    date = date - timedel
+    return date
+
+def get_Event_from_Request(request):
+    event = {
+        "date": format_date(request.form["date"]),
+        "title": request.form["title"],
+        "details": request.form["details"],
+        "slots": request.form["slots"],
+        "vegetarian": request.form.get("vegetarian")
+    }
+    return event
+
+def get_events_paginated(page, db):
+    countpages = int(ceil(database.get_count_events(db) / MAXEVENTS))
+    pages = []
+    for i in range(1,countpages+1):
+        pages.append(i)
+    start = MAXEVENTS*(int(page)-1)
+    events = database.list_events(db)
+    sortedEvents = sorted(events, key=lambda k: k['date'], reverse=True)
+    sortedEvents = sortedEvents[start:start+MAXEVENTS]
+    return pages,sortedEvents
 
 def format_date(value, include_weekday=False): # XXX: does not belong here
     """
-    converts an ISO-8601-like integer into a date string:
+    if it's not already a date string, it converts an ISO-8601-like integer into a date string:
     20120315 -> "2012-03-15 (Donnerstag)"
     """
-    date = str(value)
-    date = "%s-%s-%s" % (date[0:4], date[4:6], date[6:8])
+
+    date = value
+    try:
+        assert len(date) == 10
+        assert date[4] == date[7] == "-"
+    except AssertionError:
+        try:
+            assert len(date) == 8
+            date = str(value)
+            date = "%s-%s-%s" % (date[0:4], date[4:6], date[6:8])
+        except (AssertionError, ValueError):
+           return ""
 
     if include_weekday:
         weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
-        weekday = ("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag",
-                "Samstag", "Sonntag")[weekday]
+        weekday = (u"Montag", u"Dienstag", u"Mittwoch", u"Donnerstag", u"Freitag",
+                u"Samstag", u"Sonntag")[weekday]
         date += " (%s)" % weekday
 
     return date
@@ -209,12 +373,12 @@ def month_name(date, include_year=False):
     except (AssertionError, ValueError):
         raise ValueError("invalid date format")
 
-    month = int(date[5:7]) - 1 # TODO: use `datetime` for this
-    res = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
-            "August", "September", "Oktober", "November", "Dezember"][month]
+    month = datetime.strptime(date, "%Y-%m-%d").month - 1
+    res = [u"Januar", u"Februar", u"März", u"April", u"Mai", u"Juni", u"Juli",
+            u"August", u"September", u"Oktober", u"November", u"Dezember"][month]
 
     if include_year:
-        res += " %s" % date[0:4] # TODO: use `datetime` for this
+        res += str(datetime.strptime(date, "%Y-%m-%d").year)
 
     return res
 

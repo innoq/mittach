@@ -1,0 +1,11 @@
+<h2>Editiere Buchungen</h2>
+
+<form method="post" action="{{ url_for('cancel_event_admin_save', event_id=e_id) }}" class="well">
+  <label>Bisherige User<textarea name="current_users">
+      {% for user in bookings %}{{ user }}
+      {% endfor %}
+  </textarea></label>
+  <label>User zu löschen bzw. hinzuzufügen<input type="text" name="user" value=""></label>
+  <label><input type="checkbox" name="_method">Löschen</label>
+  <input type="submit" class="btn btn-primary" value="Speichern">
+</form>
